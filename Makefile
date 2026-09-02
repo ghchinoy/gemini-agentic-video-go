@@ -19,7 +19,7 @@ TARGET      := $(BIN_DIR)/$(BINARY_NAME)
 GO          := go
 ADDLICENSE  := addlicense
 
-.PHONY: all build clean run compare test fmt vet license license-check help
+.PHONY: all build clean run list compare multivideo multiturn test fmt vet license license-check help
 
 all: build
 
@@ -32,13 +32,29 @@ build:
 clean:
 	rm -rf $(BIN_DIR)
 
-## run: Run the application (default example 1, override with ARGS)
+## run: Run the application (default example 1, override with ARGS="...")
 run: build
-	./$(TARGET) $(ARGS)
+	@if [ -z "$(ARGS)" ]; then \
+		./$(TARGET) example 1; \
+	else \
+		./$(TARGET) $(ARGS); \
+	fi
+
+## list: List all available tutorial scenarios in the catalog
+list: build
+	./$(TARGET) example list
 
 ## compare: Run the Agentic vs. Static performance comparison benchmark
 compare: build
-	./$(TARGET) -example=compare
+	./$(TARGET) compare $(ARGS)
+
+## multivideo: Run multi-video comparative synthesis
+multivideo: build
+	./$(TARGET) multivideo $(ARGS)
+
+## multiturn: Run multi-turn video dialogue demonstration
+multiturn: build
+	./$(TARGET) multiturn $(ARGS)
 
 ## test: Run tests
 test:
@@ -54,11 +70,11 @@ vet:
 
 ## license: Apply Apache 2.0 license headers using addlicense
 license:
-	$(ADDLICENSE) -c "Google LLC" -y 2026 -l apache -v *.go
+	$(ADDLICENSE) -c "Google LLC" -y 2026 -l apache -v -ignore "sources/**" .
 
 ## license-check: Verify presence of license headers
 license-check:
-	$(ADDLICENSE) -check *.go
+	$(ADDLICENSE) -check -ignore "sources/**" .
 
 ## help: Show this help message
 help:

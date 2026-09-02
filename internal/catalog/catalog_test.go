@@ -12,16 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package catalog
 
 import (
-	"os"
-
-	"github.com/ghchinoy/gemini-agentic-video-go/cmd"
+	"testing"
 )
 
-func main() {
-	if err := cmd.Execute(); err != nil {
-		os.Exit(1)
+func TestCatalogScenarios(t *testing.T) {
+	if len(Scenarios) < 6 {
+		t.Fatalf("expected at least 6 scenarios, got %d", len(Scenarios))
+	}
+
+	for i := 1; i <= len(Scenarios); i++ {
+		sc, err := GetByID(i)
+		if err != nil {
+			t.Errorf("GetByID(%d) error: %v", i, err)
+			continue
+		}
+		if sc.ID != i {
+			t.Errorf("scenario ID mismatch: got %d, want %d", sc.ID, i)
+		}
+		if sc.Title == "" {
+			t.Errorf("scenario %d missing Title", i)
+		}
+	}
+
+	// Test invalid scenario ID
+	_, err := GetByID(999)
+	if err == nil {
+		t.Errorf("expected error for non-existent scenario ID, got nil")
 	}
 }
