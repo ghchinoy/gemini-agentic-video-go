@@ -1,0 +1,6 @@
+/sources/
+gemini-agentic-video-go
+bin/
+*.exe
+*.test
+*.out
