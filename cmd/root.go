@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/ghchinoy/gemini-agentic-video-go/internal/client"
+	"github.com/ghchinoy/gemini-agentic-video-go/internal/ui"
 	"github.com/spf13/cobra"
 	"google.golang.org/genai"
 )
@@ -68,15 +69,7 @@ func InitClient(ctx context.Context) (*genai.Client, error) {
 		return nil, fmt.Errorf("initializing GenAI client: %w", err)
 	}
 
-	fmt.Printf("=================================================================\n")
-	fmt.Printf("  Gemini Agentic Video Understanding (Go)\n")
-	fmt.Printf("  Model:    %s\n", modelFlag)
-	fmt.Printf("  Backend:  %s\n", backendFlag)
-	if backendFlag != "gemini" {
-		fmt.Printf("  Project:  %s\n", proj)
-		fmt.Printf("  Location: %s\n", loc)
-	}
-	fmt.Printf("=================================================================\n\n")
+	fmt.Println(ui.RenderBanner(modelFlag, backendFlag, proj, loc))
 
 	return genaiClient, nil
 }

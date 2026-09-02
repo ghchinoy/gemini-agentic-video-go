@@ -23,7 +23,7 @@ import (
 
 	"github.com/ghchinoy/gemini-agentic-video-go/internal/catalog"
 	"github.com/ghchinoy/gemini-agentic-video-go/internal/runner"
-	"github.com/ghchinoy/gemini-agentic-video-go/internal/telemetry"
+	"github.com/ghchinoy/gemini-agentic-video-go/internal/ui"
 	"github.com/spf13/cobra"
 	"google.golang.org/genai"
 )
@@ -81,18 +81,8 @@ func init() {
 }
 
 func printCatalog() {
-	fmt.Printf("Available Agentic Video Scenarios:\n\n")
-	for _, sc := range catalog.Scenarios {
-		fmt.Printf("  [%d] %-20s - %s\n", sc.ID, sc.Name, sc.Title)
-		fmt.Printf("      Description: %s\n", sc.Description)
-		if sc.VideoURI != "" {
-			fmt.Printf("      Video:       %s\n", sc.VideoURI)
-		}
-		if len(sc.MultiVideos) > 0 {
-			fmt.Printf("      Videos:      %s\n", strings.Join(sc.MultiVideos, ", "))
-		}
-		fmt.Println()
-	}
+	fmt.Println(ui.RenderCatalogTable(catalog.Scenarios))
+	fmt.Println()
 }
 
 func runScenario(ctx context.Context, client *genai.Client, sc catalog.Scenario) error {
@@ -138,7 +128,7 @@ func runScenario(ctx context.Context, client *genai.Client, sc catalog.Scenario)
 		fmt.Println("--- Model Response ---")
 		fmt.Println(res.Text)
 		fmt.Println("----------------------")
-		telemetry.PrintUsage(res.Usage, res.Mode, res.Duration)
+		fmt.Println(ui.RenderTelemetryCard(res.Usage, res.Mode, res.Duration))
 		return nil
 	}
 
@@ -157,6 +147,6 @@ func runScenario(ctx context.Context, client *genai.Client, sc catalog.Scenario)
 	fmt.Println("--- Model Response ---")
 	fmt.Println(res.Text)
 	fmt.Println("----------------------")
-	telemetry.PrintUsage(res.Usage, res.Mode, res.Duration)
+	fmt.Println(ui.RenderTelemetryCard(res.Usage, res.Mode, res.Duration))
 	return nil
 }

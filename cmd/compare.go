@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/ghchinoy/gemini-agentic-video-go/internal/runner"
-	"github.com/ghchinoy/gemini-agentic-video-go/internal/telemetry"
+	"github.com/ghchinoy/gemini-agentic-video-go/internal/ui"
 	"github.com/spf13/cobra"
 	"google.golang.org/genai"
 )
@@ -86,7 +86,7 @@ with net token spend reduction and latency metrics.`,
 				return 0
 			}())
 
-		telemetry.PrintComparison(aRes.Usage, sRes.Usage, aRes.Duration, sRes.Duration)
+		fmt.Println(ui.RenderBenchmarkTable(aRes.Usage, sRes.Usage, aRes.Duration, sRes.Duration))
 		return nil
 	},
 }

@@ -2,6 +2,9 @@
 
 This comprehensive guide details the architecture, technical mechanisms, execution patterns, and operational considerations for building with **Agentic Video Understanding** in Go using the official Google Gen AI SDK (`google.golang.org/genai`) and Gemini 3.7 / 3.6 / 3.5 models.
 
+> [!TIP]
+> Looking for copy-pasteable Go code examples, backend client factories, streaming patterns, and headless microservice architectures? See the companion **[`docs/developers-guide.md`](developers-guide.md)**.
+
 ---
 
 ## Table of Contents

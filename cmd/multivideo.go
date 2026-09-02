@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/ghchinoy/gemini-agentic-video-go/internal/runner"
-	"github.com/ghchinoy/gemini-agentic-video-go/internal/telemetry"
+	"github.com/ghchinoy/gemini-agentic-video-go/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -75,7 +75,7 @@ while staying comfortably within token limits.`,
 		fmt.Println("--- Model Response ---")
 		fmt.Println(res.Text)
 		fmt.Println("----------------------")
-		telemetry.PrintUsage(res.Usage, res.Mode, res.Duration)
+		fmt.Println(ui.RenderTelemetryCard(res.Usage, res.Mode, res.Duration))
 		return nil
 	},
 }

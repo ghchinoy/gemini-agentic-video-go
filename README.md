@@ -6,6 +6,7 @@ A Go CLI application demonstrating Gemini agentic video understanding with activ
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Google GenAI SDK](https://img.shields.io/badge/Google%20GenAI%20SDK-v1.70.0-4285F4?logo=google)](https://pkg.go.dev/google.golang.org/genai)
 [![User Guide](https://img.shields.io/badge/Documentation-User%20Guide-blue?logo=markdown)](docs/user-guide.md)
+[![Developer Guide](https://img.shields.io/badge/Documentation-Developer%20Guide-blueviolet?logo=go)](docs/developers-guide.md)
 
 ## Table of Contents
 
@@ -242,13 +243,19 @@ This project is licensed under the [Apache 2.0 License](LICENSE).
 
 ## Deep Dive Documentation
 
-For in-depth architectural details, execution mechanics, and optimization guides, see [`docs/user-guide.md`](docs/user-guide.md):
+- **[`docs/developers-guide.md`](docs/developers-guide.md)**: **Go API Reference & Engineering Guide**
+  - Production Go patterns for `google.golang.org/genai`.
+  - Single-video ingestion, Content part ordering, and Thinking configuration.
+  - Multi-video comparative synthesis and multi-turn stateful dialogues.
+  - Real-time streaming (`GenerateContentStream`) and context timeout enforcement.
+  - Token telemetry accounting and headless microservice integration.
 
-- **[Under the Hood: The `load_video` Tool](docs/user-guide.md#2-under-the-hood-the-load_video-tool)**: Parameters and tool calling mechanisms.
-- **[Four Core Execution Patterns](docs/user-guide.md#3-four-core-execution-patterns)**: Transcript triage, coarse-to-fine search, adaptive high-FPS replay, and tool chaining.
-- **[Empirical Benchmarks](docs/user-guide.md#4-empirical-benchmarks--token-spend-reduction)**: Accuracy deltas and up to 95.7% token spend reduction on long-form benchmarks.
-- **[Token Accounting & Telemetry](docs/user-guide.md#5-critical-developer-pitfall-token-accounting--telemetry)**: Why dynamic video tokens reside in `thoughtsTokenCount` rather than `promptTokenCount`.
-- **[Multi-Video Synthesis & Multi-Turn State](docs/user-guide.md#8-multi-video-comparative-synthesis)**: Technical patterns for multi-video prompts and stateful conversations.
+- **[`docs/user-guide.md`](docs/user-guide.md)**: **Architectural Overview & Concepts**
+  - **[Under the Hood: The `load_video` Tool](docs/user-guide.md#2-under-the-hood-the-load_video-tool)**: Parameters and tool calling mechanisms.
+  - **[Four Core Execution Patterns](docs/user-guide.md#3-four-core-execution-patterns)**: Transcript triage, coarse-to-fine search, adaptive high-FPS replay, and tool chaining.
+  - **[Empirical Benchmarks](docs/user-guide.md#4-empirical-benchmarks--token-spend-reduction)**: Accuracy deltas and up to 95.7% token spend reduction on long-form benchmarks.
+  - **[Token Accounting & Telemetry](docs/user-guide.md#5-critical-developer-pitfall-token-accounting--telemetry)**: Why dynamic video tokens reside in `thoughtsTokenCount` rather than `promptTokenCount`.
+  - **[Multi-Video Synthesis & Multi-Turn State](docs/user-guide.md#8-multi-video-comparative-synthesis)**: Technical patterns for multi-video prompts and stateful conversations.
 
 ## Credits & Acknowledgements
 
