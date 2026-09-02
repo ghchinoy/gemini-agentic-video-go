@@ -4,14 +4,14 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
+// Package telemetry provides metrics formatting and benchmark comparison for video processing.
 package telemetry
 
 import (
@@ -50,48 +50,48 @@ func PrintUsage(usage *genai.GenerateContentResponseUsageMetadata, mode genai.Me
 }
 
 // PrintComparison displays a side-by-side performance comparison table.
-func PrintComparison(aUsage, sUsage *genai.GenerateContentResponseUsageMetadata, aDur, sDur time.Duration) {
+func PrintComparison(agenticUsage, staticUsage *genai.GenerateContentResponseUsageMetadata, agenticDuration, staticDuration time.Duration) {
 	fmt.Printf("=========================================================================================\n")
 	fmt.Printf("  PERFORMANCE BENCHMARK: AGENTIC VIDEO vs. STATIC (1 FPS) INGESTION\n")
 	fmt.Printf("=========================================================================================\n")
 
-	aTotal := int64(0)
-	sTotal := int64(0)
-	aPrompt := int32(0)
-	sPrompt := int32(0)
-	aCand := int32(0)
-	sCand := int32(0)
-	aThoughts := int32(0)
-	sThoughts := int32(0)
+	agenticTotal := int64(0)
+	staticTotal := int64(0)
+	agenticPrompt := int32(0)
+	staticPrompt := int32(0)
+	agenticCandidates := int32(0)
+	staticCandidates := int32(0)
+	agenticThoughts := int32(0)
+	staticThoughts := int32(0)
 
-	if aUsage != nil {
-		aTotal = int64(aUsage.TotalTokenCount)
-		aPrompt = aUsage.PromptTokenCount
-		aCand = aUsage.CandidatesTokenCount
-		aThoughts = aUsage.ThoughtsTokenCount
+	if agenticUsage != nil {
+		agenticTotal = int64(agenticUsage.TotalTokenCount)
+		agenticPrompt = agenticUsage.PromptTokenCount
+		agenticCandidates = agenticUsage.CandidatesTokenCount
+		agenticThoughts = agenticUsage.ThoughtsTokenCount
 	}
-	if sUsage != nil {
-		sTotal = int64(sUsage.TotalTokenCount)
-		sPrompt = sUsage.PromptTokenCount
-		sCand = sUsage.CandidatesTokenCount
-		sThoughts = sUsage.ThoughtsTokenCount
+	if staticUsage != nil {
+		staticTotal = int64(staticUsage.TotalTokenCount)
+		staticPrompt = staticUsage.PromptTokenCount
+		staticCandidates = staticUsage.CandidatesTokenCount
+		staticThoughts = staticUsage.ThoughtsTokenCount
 	}
 
 	var tokenDeltaPct float64
-	if sTotal > 0 {
-		tokenDeltaPct = float64(sTotal-aTotal) / float64(sTotal) * 100.0
+	if staticTotal > 0 {
+		tokenDeltaPct = float64(staticTotal-agenticTotal) / float64(staticTotal) * 100.0
 	}
 
 	fmt.Printf("| Metric                     | Agentic Video        | Static Ingestion     | Observation / Delta       |\n")
 	fmt.Printf("|:---------------------------|:---------------------|:---------------------|:--------------------------|\n")
-	fmt.Printf("| Total Consumed Tokens      | %-20d | %-20d | %+.1f%% net token spend   |\n", aTotal, sTotal, tokenDeltaPct)
-	fmt.Printf("| Prompt Tokens (Input)      | %-20d | %-20d | %-+25s |\n", aPrompt, sPrompt, fmt.Sprintf("%+d input tokens", aPrompt-sPrompt))
-	fmt.Printf("| Candidate Output Tokens    | %-20d | %-20d | %-+25s |\n", aCand, sCand, fmt.Sprintf("%+d output tokens", aCand-sCand))
-	fmt.Printf("| Reasoning Thoughts Tokens  | %-20d | %-20d | %-+25s |\n", aThoughts, sThoughts, "dynamic frame inspection")
+	fmt.Printf("| Total Consumed Tokens      | %-20d | %-20d | %+.1f%% net token spend   |\n", agenticTotal, staticTotal, tokenDeltaPct)
+	fmt.Printf("| Prompt Tokens (Input)      | %-20d | %-20d | %-+25s |\n", agenticPrompt, staticPrompt, fmt.Sprintf("%+d input tokens", agenticPrompt-staticPrompt))
+	fmt.Printf("| Candidate Output Tokens    | %-20d | %-20d | %-+25s |\n", agenticCandidates, staticCandidates, fmt.Sprintf("%+d output tokens", agenticCandidates-staticCandidates))
+	fmt.Printf("| Reasoning Thoughts Tokens  | %-20d | %-20d | %-+25s |\n", agenticThoughts, staticThoughts, "dynamic frame inspection")
 	fmt.Printf("| Latency (Duration)         | %-20v | %-20v | %-+25s |\n",
-		aDur.Round(time.Millisecond),
-		sDur.Round(time.Millisecond),
-		fmt.Sprintf("diff: %v", (aDur - sDur).Round(time.Millisecond)))
+		agenticDuration.Round(time.Millisecond),
+		staticDuration.Round(time.Millisecond),
+		fmt.Sprintf("diff: %v", (agenticDuration-staticDuration).Round(time.Millisecond)))
 	fmt.Printf("=========================================================================================\n")
 	fmt.Printf("💡 Telemetry Insight: In Agentic mode, initial prompt tokens are minimal because video frames\n")
 	fmt.Printf("   are fetched dynamically during the model's Think ➔ Act timeline loop (accounted under thoughts).\n\n")

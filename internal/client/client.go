@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package client provides configuration and initialization helpers for the Google GenAI client.
 package client
 
 import (
@@ -30,39 +31,6 @@ type Config struct {
 	Project  string
 	Location string
 	APIKey   string
-}
-
-// ResolveProject determines the GCP project ID from flag, env, or gcloud CLI.
-func ResolveProject(flagValue string) string {
-	if flagValue != "" && flagValue != "[your-project-id]" {
-		return flagValue
-	}
-	if envVal := os.Getenv("GOOGLE_CLOUD_PROJECT"); envVal != "" && envVal != "[your-project-id]" {
-		return envVal
-	}
-	// Fallback to active gcloud config
-	out, err := exec.Command("gcloud", "config", "get-value", "project").Output()
-	if err == nil {
-		p := strings.TrimSpace(string(out))
-		if p != "" && p != "(unset)" {
-			return p
-		}
-	}
-	return ""
-}
-
-// ResolveLocation determines the GCP location/region from flag or environment.
-func ResolveLocation(flagValue string) string {
-	if flagValue != "" {
-		return flagValue
-	}
-	if envVal := os.Getenv("GOOGLE_CLOUD_LOCATION"); envVal != "" {
-		return envVal
-	}
-	if envVal := os.Getenv("GOOGLE_CLOUD_REGION"); envVal != "" {
-		return envVal
-	}
-	return "global"
 }
 
 // NewClient initializes a Google GenAI Client with the selected backend.
@@ -101,4 +69,37 @@ func NewClient(ctx context.Context, cfg Config) (*genai.Client, error) {
 	}
 
 	return genai.NewClient(ctx, clientCfg)
+}
+
+// ResolveProject determines the GCP project ID from flag, env, or gcloud CLI.
+func ResolveProject(flagValue string) string {
+	if flagValue != "" && flagValue != "[your-project-id]" {
+		return flagValue
+	}
+	if envVal := os.Getenv("GOOGLE_CLOUD_PROJECT"); envVal != "" && envVal != "[your-project-id]" {
+		return envVal
+	}
+	// Fallback to active gcloud config
+	out, err := exec.Command("gcloud", "config", "get-value", "project").Output()
+	if err == nil {
+		p := strings.TrimSpace(string(out))
+		if p != "" && p != "(unset)" {
+			return p
+		}
+	}
+	return ""
+}
+
+// ResolveLocation determines the GCP location/region from flag or environment.
+func ResolveLocation(flagValue string) string {
+	if flagValue != "" {
+		return flagValue
+	}
+	if envVal := os.Getenv("GOOGLE_CLOUD_LOCATION"); envVal != "" {
+		return envVal
+	}
+	if envVal := os.Getenv("GOOGLE_CLOUD_REGION"); envVal != "" {
+		return envVal
+	}
+	return "global"
 }

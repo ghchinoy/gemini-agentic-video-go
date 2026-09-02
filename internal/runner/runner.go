@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package runner executes single-video, multi-video, and multi-turn requests.
 package runner
 
 import (
@@ -58,30 +59,6 @@ type Result struct {
 	Usage    *genai.GenerateContentResponseUsageMetadata
 }
 
-// ParseThinkingLevel maps string representation to genai.ThinkingLevel.
-func ParseThinkingLevel(level string) genai.ThinkingLevel {
-	switch strings.ToLower(level) {
-	case "low":
-		return genai.ThinkingLevelLow
-	case "high":
-		return genai.ThinkingLevelHigh
-	case "minimal":
-		return genai.ThinkingLevelMinimal
-	default:
-		return genai.ThinkingLevelMedium
-	}
-}
-
-// ParseProcessingMode maps string representation to genai.MediaProcessing.
-func ParseProcessingMode(mode string) genai.MediaProcessing {
-	switch strings.ToLower(mode) {
-	case "static":
-		return genai.MediaProcessingStatic
-	default:
-		return genai.MediaProcessingAgentic
-	}
-}
-
 // Execute performs a single-video understanding request.
 func Execute(ctx context.Context, client *genai.Client, req Request) (*Result, error) {
 	mimeType := req.MIMEType
@@ -109,17 +86,17 @@ func Execute(ctx context.Context, client *genai.Client, req Request) (*Result, e
 	}
 
 	start := time.Now()
-	resp, err := client.Models.GenerateContent(ctx, req.ModelID, contents, genConfig)
+	response, err := client.Models.GenerateContent(ctx, req.ModelID, contents, genConfig)
 	duration := time.Since(start)
 	if err != nil {
-		return nil, fmt.Errorf("GenerateContent failed: %w", err)
+		return nil, fmt.Errorf("generating content: %w", err)
 	}
 
 	return &Result{
 		Mode:     req.Mode,
-		Text:     resp.Text(),
+		Text:     response.Text(),
 		Duration: duration,
-		Usage:    resp.UsageMetadata,
+		Usage:    response.UsageMetadata,
 	}, nil
 }
 
@@ -127,13 +104,13 @@ func Execute(ctx context.Context, client *genai.Client, req Request) (*Result, e
 func ExecuteMultiVideo(ctx context.Context, client *genai.Client, req MultiVideoRequest) (*Result, error) {
 	var parts []*genai.Part
 
-	for _, v := range req.Videos {
-		mimeType := v.MIMEType
+	for _, video := range req.Videos {
+		mimeType := video.MIMEType
 		if mimeType == "" {
 			mimeType = "video/mp4"
 		}
-		part := genai.NewPartFromURI(v.URI, mimeType)
-		part.MediaProcessing = v.Mode
+		part := genai.NewPartFromURI(video.URI, mimeType)
+		part.MediaProcessing = video.Mode
 		parts = append(parts, part)
 	}
 
@@ -151,17 +128,17 @@ func ExecuteMultiVideo(ctx context.Context, client *genai.Client, req MultiVideo
 	}
 
 	start := time.Now()
-	resp, err := client.Models.GenerateContent(ctx, req.ModelID, contents, genConfig)
+	response, err := client.Models.GenerateContent(ctx, req.ModelID, contents, genConfig)
 	duration := time.Since(start)
 	if err != nil {
-		return nil, fmt.Errorf("multi-video GenerateContent failed: %w", err)
+		return nil, fmt.Errorf("generating multi-video content: %w", err)
 	}
 
 	return &Result{
 		Mode:     genai.MediaProcessingAgentic,
-		Text:     resp.Text(),
+		Text:     response.Text(),
 		Duration: duration,
-		Usage:    resp.UsageMetadata,
+		Usage:    response.UsageMetadata,
 	}, nil
 }
 
@@ -184,45 +161,69 @@ func ExecuteMultiTurn(ctx context.Context, client *genai.Client, modelID, videoU
 		turnNum := i + 1
 		fmt.Printf("--- Turn %d Prompt: %q ---\n", turnNum, prompt)
 
+		var userContent *genai.Content
 		if i == 0 {
 			// First turn includes video part + initial prompt
 			videoPart := genai.NewPartFromURI(videoURI, "video/mp4")
 			videoPart.MediaProcessing = genai.MediaProcessingAgentic
-			userContent := genai.NewContentFromParts([]*genai.Part{
+			userContent = genai.NewContentFromParts([]*genai.Part{
 				videoPart,
 				genai.NewPartFromText(prompt),
 			}, genai.RoleUser)
-			conversationHistory = append(conversationHistory, userContent)
 		} else {
 			// Subsequent turns append user prompt to conversation history
-			userContent := genai.NewContentFromText(prompt, genai.RoleUser)
-			conversationHistory = append(conversationHistory, userContent)
+			userContent = genai.NewContentFromText(prompt, genai.RoleUser)
 		}
+		conversationHistory = append(conversationHistory, userContent)
 
 		start := time.Now()
-		resp, err := client.Models.GenerateContent(ctx, modelID, conversationHistory, genConfig)
+		response, err := client.Models.GenerateContent(ctx, modelID, conversationHistory, genConfig)
 		duration := time.Since(start)
 		if err != nil {
 			return results, fmt.Errorf("turn %d failed: %w", turnNum, err)
 		}
 
-		res := &Result{
+		result := &Result{
 			Title:    fmt.Sprintf("Turn %d", turnNum),
 			Mode:     genai.MediaProcessingAgentic,
-			Text:     resp.Text(),
+			Text:     response.Text(),
 			Duration: duration,
-			Usage:    resp.UsageMetadata,
+			Usage:    response.UsageMetadata,
 		}
-		results = append(results, res)
+		results = append(results, result)
 
 		// Echo model response back to conversation history to maintain context
-		modelContent := genai.NewContentFromText(resp.Text(), genai.RoleModel)
+		modelContent := genai.NewContentFromText(response.Text(), genai.RoleModel)
 		conversationHistory = append(conversationHistory, modelContent)
 
 		fmt.Println("\nModel Response:")
-		fmt.Println(res.Text)
-		telemetry.PrintUsage(res.Usage, res.Mode, res.Duration)
+		fmt.Println(result.Text)
+		telemetry.PrintUsage(result.Usage, result.Mode, result.Duration)
 	}
 
 	return results, nil
+}
+
+// ParseThinkingLevel maps string representation to genai.ThinkingLevel.
+func ParseThinkingLevel(level string) genai.ThinkingLevel {
+	switch strings.ToLower(level) {
+	case "low":
+		return genai.ThinkingLevelLow
+	case "high":
+		return genai.ThinkingLevelHigh
+	case "minimal":
+		return genai.ThinkingLevelMinimal
+	default:
+		return genai.ThinkingLevelMedium
+	}
+}
+
+// ParseProcessingMode maps string representation to genai.MediaProcessing.
+func ParseProcessingMode(mode string) genai.MediaProcessing {
+	switch strings.ToLower(mode) {
+	case "static":
+		return genai.MediaProcessingStatic
+	default:
+		return genai.MediaProcessingAgentic
+	}
 }

@@ -20,26 +20,25 @@ import (
 
 func TestCatalogScenarios(t *testing.T) {
 	if len(Scenarios) < 6 {
-		t.Fatalf("expected at least 6 scenarios, got %d", len(Scenarios))
+		t.Fatalf("len(Scenarios) = %d, want at least 6", len(Scenarios))
 	}
 
 	for i := 1; i <= len(Scenarios); i++ {
-		sc, err := GetByID(i)
+		scenario, err := Find(i)
 		if err != nil {
-			t.Errorf("GetByID(%d) error: %v", i, err)
+			t.Errorf("Find(%d) error = %v, want nil", i, err)
 			continue
 		}
-		if sc.ID != i {
-			t.Errorf("scenario ID mismatch: got %d, want %d", sc.ID, i)
+		if scenario.ID != i {
+			t.Errorf("Find(%d).ID = %d, want %d", i, scenario.ID, i)
 		}
-		if sc.Title == "" {
-			t.Errorf("scenario %d missing Title", i)
+		if scenario.Title == "" {
+			t.Errorf("Find(%d).Title is empty, want non-empty string", i)
 		}
 	}
 
-	// Test invalid scenario ID
-	_, err := GetByID(999)
-	if err == nil {
-		t.Errorf("expected error for non-existent scenario ID, got nil")
+	// Test invalid scenario ID returns an error
+	if _, err := Find(999); err == nil {
+		t.Errorf("Find(999) error = nil, want non-nil")
 	}
 }

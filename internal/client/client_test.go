@@ -21,25 +21,24 @@ import (
 
 func TestResolveLocation(t *testing.T) {
 	tests := []struct {
-		name      string
-		flagVal   string
-		envLoc    string
-		envReg    string
-		expected  string
+		name     string
+		flagVal  string
+		envLoc   string
+		expected string
 	}{
 		{
-			name:     "flag provided",
+			name:     "flag_provided",
 			flagVal:  "us-central1",
 			expected: "us-central1",
 		},
 		{
-			name:     "env location set",
+			name:     "env_location_set",
 			flagVal:  "",
 			envLoc:   "europe-west1",
 			expected: "europe-west1",
 		},
 		{
-			name:     "fallback to global",
+			name:     "fallback_to_global",
 			flagVal:  "",
 			expected: "global",
 		},
@@ -53,15 +52,16 @@ func TestResolveLocation(t *testing.T) {
 			}
 			got := ResolveLocation(tt.flagVal)
 			if got != tt.expected {
-				t.Errorf("ResolveLocation(%q) = %q; want %q", tt.flagVal, got, tt.expected)
+				t.Errorf("ResolveLocation(%q) = %q, want %q", tt.flagVal, got, tt.expected)
 			}
 		})
 	}
 }
 
 func TestResolveProject(t *testing.T) {
-	got := ResolveProject("custom-project")
-	if got != "custom-project" {
-		t.Errorf("ResolveProject(custom-project) = %q; want custom-project", got)
+	input := "custom-project"
+	got := ResolveProject(input)
+	if got != input {
+		t.Errorf("ResolveProject(%q) = %q, want %q", input, got, input)
 	}
 }

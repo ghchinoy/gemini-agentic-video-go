@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package cmd defines the Cobra CLI commands for Gemini Agentic Video.
 package cmd
 
 import (
@@ -53,18 +54,18 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&backendFlag, "backend", "b", "enterprise", "Client backend: 'enterprise', 'vertex', or 'gemini'")
 }
 
-// GetClient initializes and returns the GenAI client with resolved project configuration.
-func GetClient(ctx context.Context) (*genai.Client, error) {
+// InitClient initializes and returns the GenAI client with resolved project configuration.
+func InitClient(ctx context.Context) (*genai.Client, error) {
 	proj := client.ResolveProject(projectFlag)
 	loc := client.ResolveLocation(locationFlag)
 
-	c, err := client.NewClient(ctx, client.Config{
+	genaiClient, err := client.NewClient(ctx, client.Config{
 		Backend:  backendFlag,
 		Project:  proj,
 		Location: loc,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize GenAI client: %w", err)
+		return nil, fmt.Errorf("initializing GenAI client: %w", err)
 	}
 
 	fmt.Printf("=================================================================\n")
@@ -77,5 +78,5 @@ func GetClient(ctx context.Context) (*genai.Client, error) {
 	}
 	fmt.Printf("=================================================================\n\n")
 
-	return c, nil
+	return genaiClient, nil
 }

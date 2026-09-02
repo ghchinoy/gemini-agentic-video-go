@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/ghchinoy/gemini-agentic-video-go/internal/runner"
@@ -40,8 +39,8 @@ var multivideoCmd = &cobra.Command{
 supporting mixed processing modes (e.g. Video 1 Agentic + Video 2 Static)
 while staying comfortably within token limits.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx := context.Background()
-		client, err := GetClient(ctx)
+		ctx := cmd.Context()
+		client, err := InitClient(ctx)
 		if err != nil {
 			return err
 		}

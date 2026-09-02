@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -39,8 +38,8 @@ var compareCmd = &cobra.Command{
 frame ingestion, displaying an automated side-by-side performance comparison
 with net token spend reduction and latency metrics.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx := context.Background()
-		client, err := GetClient(ctx)
+		ctx := cmd.Context()
+		client, err := InitClient(ctx)
 		if err != nil {
 			return err
 		}

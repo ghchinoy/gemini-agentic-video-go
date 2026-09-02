@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/ghchinoy/gemini-agentic-video-go/internal/runner"
@@ -42,8 +41,8 @@ with customizable processing mode ('agentic' or 'static') and thinking level.`,
 			return fmt.Errorf("--video flag is required")
 		}
 
-		ctx := context.Background()
-		client, err := GetClient(ctx)
+		ctx := cmd.Context()
+		client, err := InitClient(ctx)
 		if err != nil {
 			return err
 		}

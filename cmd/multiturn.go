@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/ghchinoy/gemini-agentic-video-go/internal/runner"
@@ -34,8 +33,8 @@ var multiturnCmd = &cobra.Command{
 	Long: `Demonstrates sequential conversational question-answering across multiple
 turns while maintaining video timeline navigation state without re-ingesting frames.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx := context.Background()
-		client, err := GetClient(ctx)
+		ctx := cmd.Context()
+		client, err := InitClient(ctx)
 		if err != nil {
 			return err
 		}

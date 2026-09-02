@@ -36,7 +36,7 @@ var exampleCmd = &cobra.Command{
 including YouTube long-form Q&A, static baseline comparison, GCS trail-cam
 analysis, YouTube Shorts, multi-video synthesis, and multi-turn conversations.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx := context.Background()
+		ctx := cmd.Context()
 
 		target := "1"
 		if len(args) > 0 {
@@ -48,7 +48,7 @@ analysis, YouTube Shorts, multi-video synthesis, and multi-turn conversations.`,
 			return nil
 		}
 
-		client, err := GetClient(ctx)
+		client, err := InitClient(ctx)
 		if err != nil {
 			return err
 		}
@@ -67,7 +67,7 @@ analysis, YouTube Shorts, multi-video synthesis, and multi-turn conversations.`,
 			return fmt.Errorf("invalid example ID %q; use 1-%d, 'all', or 'list'", target, len(catalog.Scenarios))
 		}
 
-		sc, err := catalog.GetByID(id)
+		sc, err := catalog.Find(id)
 		if err != nil {
 			return err
 		}
