@@ -25,9 +25,10 @@ import (
 )
 
 var (
-	compareVideoURI string
-	comparePrompt   string
-	compareThinking string
+	compareVideoURI   string
+	comparePrompt     string
+	compareThinking   string
+	compareConcurrent bool
 )
 
 // compareCmd represents the compare command
@@ -36,7 +37,10 @@ var compareCmd = &cobra.Command{
 	Short: "Benchmark Agentic vs. Static processing on the same video",
 	Long: `Executes the identical query using Agentic video navigation and Static 1 FPS
 frame ingestion, displaying an automated side-by-side performance comparison
-with net token spend reduction and latency metrics.`,
+with net token spend reduction and latency metrics.
+
+By default, runs both pipelines concurrently in parallel goroutines with a live
+side-by-side progress, elapsed time, and token counter.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
 		client, err := InitClient(ctx)
@@ -46,6 +50,39 @@ with net token spend reduction and latency metrics.`,
 
 		thinking := runner.ParseThinkingLevel(compareThinking)
 
+		if compareConcurrent {
+			tracker := ui.NewBenchmarkTracker(compareThinking)
+			tracker.Start()
+
+			benchRes := runner.ExecuteConcurrentBenchmark(ctx, client, runner.Request{
+				ModelID:       modelFlag,
+				VideoURI:      compareVideoURI,
+				Prompt:        comparePrompt,
+				ThinkingLevel: thinking,
+			}, func(agenticDone, staticDone bool, aRes, sRes *runner.Result) {
+				tracker.Update(agenticDone, staticDone, aRes, sRes)
+			})
+
+			tracker.SetErrors(benchRes.AgenticError, benchRes.StaticError)
+			tracker.Stop()
+
+			if benchRes.AgenticError != nil && benchRes.StaticError != nil {
+				return fmt.Errorf("both benchmarks failed: agentic: %v; static: %v", benchRes.AgenticError, benchRes.StaticError)
+			}
+			if benchRes.AgenticError != nil {
+				return fmt.Errorf("agentic benchmark failed: %w", benchRes.AgenticError)
+			}
+			if benchRes.StaticError != nil {
+				return fmt.Errorf("static benchmark failed: %w", benchRes.StaticError)
+			}
+
+			aUsage := benchRes.AgenticResult.Usage
+			sUsage := benchRes.StaticResult.Usage
+			fmt.Println(ui.RenderBenchmarkTable(aUsage, sUsage, benchRes.AgenticResult.Duration, benchRes.StaticResult.Duration))
+			return nil
+		}
+
+		// Sequential fallback
 		fmt.Println(">>> Step 1/2: Executing with AGENTIC video processing...")
 		aRes, err := runner.Execute(ctx, client, runner.Request{
 			ModelID:       modelFlag,
@@ -97,4 +134,5 @@ func init() {
 	compareCmd.Flags().StringVarP(&compareVideoURI, "video", "v", "https://www.youtube.com/watch?v=LzExSq9DU9w", "Video URI for comparison benchmark")
 	compareCmd.Flags().StringVar(&comparePrompt, "prompt", "What were the key revenue figures mentioned by the presenter, and at what timestamp do they appear?", "Prompt for comparison benchmark")
 	compareCmd.Flags().StringVar(&compareThinking, "thinking", "medium", "Thinking level: 'low', 'medium', or 'high'")
+	compareCmd.Flags().BoolVar(&compareConcurrent, "concurrent", true, "Execute Agentic and Static benchmarks concurrently in parallel goroutines with live telemetry")
 }

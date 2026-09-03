@@ -67,11 +67,12 @@ List all available tutorial scenarios:
 ./bin/gemini-agentic-video-go example list
 ```
 
-Run a side-by-side performance benchmark comparing Agentic vs. Static (1 FPS) processing:
+Run a side-by-side performance benchmark comparing Agentic vs. Static (1 FPS) processing concurrently in parallel goroutines with live elapsed timers and token telemetry:
 
 ```bash
 make compare
 # or: ./bin/gemini-agentic-video-go compare
+# sequential fallback: ./bin/gemini-agentic-video-go compare --concurrent=false
 ```
 
 Compare two videos in a single prompt (multi-video comparative synthesis):

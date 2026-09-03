@@ -60,3 +60,23 @@ func TestParseProcessingMode(t *testing.T) {
 		}
 	}
 }
+
+func TestBenchmarkResultStruct(t *testing.T) {
+	res := BenchmarkResult{
+		AgenticResult: &Result{
+			Title: "Agentic",
+			Mode:  genai.MediaProcessingAgentic,
+		},
+		StaticResult: &Result{
+			Title: "Static",
+			Mode:  genai.MediaProcessingStatic,
+		},
+	}
+
+	if res.AgenticResult.Mode != genai.MediaProcessingAgentic {
+		t.Errorf("res.AgenticResult.Mode = %v, want Agentic", res.AgenticResult.Mode)
+	}
+	if res.StaticResult.Mode != genai.MediaProcessingStatic {
+		t.Errorf("res.StaticResult.Mode = %v, want Static", res.StaticResult.Mode)
+	}
+}

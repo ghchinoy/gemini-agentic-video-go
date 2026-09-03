@@ -15,6 +15,7 @@ A comprehensive, code-first guide to building production applications, microserv
 7. [Streaming Video Exploration](#7-streaming-video-exploration)
 8. [Token Accounting & Cost Telemetry](#8-token-accounting--cost-telemetry)
 9. [Production Engineering Best Practices](#9-production-engineering-best-practices)
+10. [Concurrent Benchmarking & Goroutines](#10-concurrent-benchmarking--goroutines)
 
 ---
 
@@ -382,3 +383,69 @@ type VideoResponse struct {
 }
 ```
 This keeps your HTTP services clean, fast, and completely decoupled from terminal presentation code.
+
+---
+
+## 10. Concurrent Benchmarking & Goroutines
+
+One of Go's distinct superpowers over scripting environments is its lightweight concurrency model. Running comparative model or modality benchmarks (e.g. Agentic vs. Static) can be parallelized with zero thread overhead using **goroutines**, **`sync.WaitGroup`**, and **`sync.Mutex`**:
+
+```go
+// ExecuteConcurrentBenchmark executes Agentic and Static video queries in parallel goroutines.
+func ExecuteConcurrentBenchmark(
+	ctx context.Context,
+	client *genai.Client,
+	req runner.Request,
+	callback runner.BenchmarkProgressCallback,
+) runner.BenchmarkResult {
+	start := time.Now()
+	var res runner.BenchmarkResult
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
+	agenticReq := req
+	agenticReq.Mode = genai.MediaProcessingAgentic
+
+	staticReq := req
+	staticReq.Mode = genai.MediaProcessingStatic
+
+	wg.Add(2)
+
+	// Goroutine 1: Agentic Processing (~20-25s wall clock)
+	go func() {
+		defer wg.Done()
+		aResult, aErr := runner.Execute(ctx, client, agenticReq)
+		mu.Lock()
+		res.AgenticResult = aResult
+		res.AgenticError = aErr
+		if callback != nil {
+			callback(true, res.StaticResult != nil || res.StaticError != nil, aResult, res.StaticResult)
+		}
+		mu.Unlock()
+	}()
+
+	// Goroutine 2: Static 1-FPS Processing (~45-60s wall clock)
+	go func() {
+		defer wg.Done()
+		sResult, sErr := runner.Execute(ctx, client, staticReq)
+		mu.Lock()
+		res.StaticResult = sResult
+		res.StaticError = sErr
+		if callback != nil {
+			callback(res.AgenticResult != nil || res.AgenticError != nil, true, res.AgenticResult, sResult)
+		}
+		mu.Unlock()
+	}()
+
+	// Wait for both pipelines to complete concurrently
+	wg.Wait()
+	res.TotalWallClock = time.Since(start)
+	return res
+}
+```
+
+### Why Concurrency Matters Here:
+1. **Halves Benchmark Wall Clock**: Instead of waiting 25s + 50s = 75s sequentially, both pipelines execute simultaneously, finishing in ~45-50s max.
+2. **Live Race Visibility**: Because Agentic finishes ~25s before Static, developers can witness the model reach its conclusion in real time while Static is still decoding frames.
+3. **Headless & Composable**: The runner function has zero UI dependencies and can stream status events back to any caller (CLI ticker, HTTP server-sent events, or WebSocket).
+

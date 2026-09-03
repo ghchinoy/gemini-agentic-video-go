@@ -1,0 +1,64 @@
+// Copyright 2026 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package ui
+
+import (
+	"testing"
+	"time"
+
+	"github.com/ghchinoy/gemini-agentic-video-go/internal/runner"
+	"google.golang.org/genai"
+)
+
+func TestBenchmarkTrackerLifecycle(t *testing.T) {
+	tracker := NewBenchmarkTracker("medium")
+	if tracker == nil {
+		t.Fatalf("NewBenchmarkTracker() = nil, want valid tracker")
+	}
+
+	// Test non-TTY mode
+	tracker.isTTY = false
+	tracker.Start()
+
+	// Simulate Agentic finish
+	aRes := &runner.Result{
+		Title:    "Agentic Run",
+		Duration: 15 * time.Second,
+		Usage: &genai.GenerateContentResponseUsageMetadata{
+			TotalTokenCount: 8000,
+		},
+	}
+	tracker.Update(true, false, aRes, nil)
+
+	// Simulate Static finish
+	sRes := &runner.Result{
+		Title:    "Static Run",
+		Duration: 45 * time.Second,
+		Usage: &genai.GenerateContentResponseUsageMetadata{
+			TotalTokenCount: 180000,
+		},
+	}
+	tracker.Update(true, true, aRes, sRes)
+	tracker.Stop()
+}
+
+func TestBenchmarkTrackerFormatElapsed(t *testing.T) {
+	tracker := NewBenchmarkTracker("medium")
+	got := tracker.formatElapsed(65400 * time.Millisecond)
+	want := "01:05.4"
+	if got != want {
+		t.Errorf("formatElapsed(65.4s) = %q, want %q", got, want)
+	}
+}

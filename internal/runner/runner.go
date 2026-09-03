@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ghchinoy/gemini-agentic-video-go/internal/telemetry"
@@ -58,6 +59,18 @@ type Result struct {
 	Duration time.Duration
 	Usage    *genai.GenerateContentResponseUsageMetadata
 }
+
+// BenchmarkResult encapsulates outputs from concurrent Agentic vs. Static execution.
+type BenchmarkResult struct {
+	AgenticResult  *Result
+	AgenticError   error
+	StaticResult   *Result
+	StaticError    error
+	TotalWallClock time.Duration
+}
+
+// BenchmarkProgressCallback receives updates when individual benchmark pipelines complete.
+type BenchmarkProgressCallback func(agenticDone, staticDone bool, aRes, sRes *Result)
 
 // Execute performs a single-video understanding request.
 func Execute(ctx context.Context, client *genai.Client, req Request) (*Result, error) {
@@ -202,6 +215,57 @@ func ExecuteMultiTurn(ctx context.Context, client *genai.Client, modelID, videoU
 	}
 
 	return results, nil
+}
+
+// ExecuteConcurrentBenchmark executes Agentic and Static video queries in parallel goroutines.
+func ExecuteConcurrentBenchmark(
+	ctx context.Context,
+	client *genai.Client,
+	req Request,
+	callback BenchmarkProgressCallback,
+) BenchmarkResult {
+	start := time.Now()
+	var res BenchmarkResult
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
+	agenticReq := req
+	agenticReq.Mode = genai.MediaProcessingAgentic
+
+	staticReq := req
+	staticReq.Mode = genai.MediaProcessingStatic
+
+	wg.Add(2)
+
+	// Goroutine 1: Agentic Processing
+	go func() {
+		defer wg.Done()
+		aResult, aErr := Execute(ctx, client, agenticReq)
+		mu.Lock()
+		res.AgenticResult = aResult
+		res.AgenticError = aErr
+		if callback != nil {
+			callback(true, res.StaticResult != nil || res.StaticError != nil, aResult, res.StaticResult)
+		}
+		mu.Unlock()
+	}()
+
+	// Goroutine 2: Static 1-FPS Processing
+	go func() {
+		defer wg.Done()
+		sResult, sErr := Execute(ctx, client, staticReq)
+		mu.Lock()
+		res.StaticResult = sResult
+		res.StaticError = sErr
+		if callback != nil {
+			callback(res.AgenticResult != nil || res.AgenticError != nil, true, res.AgenticResult, sResult)
+		}
+		mu.Unlock()
+	}()
+
+	wg.Wait()
+	res.TotalWallClock = time.Since(start)
+	return res
 }
 
 // ParseThinkingLevel maps string representation to genai.ThinkingLevel.
