@@ -152,7 +152,8 @@ When enabling Agentic Video (`media_processing="agentic"`), token reporting shif
 
 | Model ID | Agentic Video Support | Default Mode | Recommended Scenarios |
 | :--- | :---: | :---: | :--- |
-| `gemini-3.7-flash` | ✅ Supported | Static (1 FPS) | Dense visual QA, split-second action analysis, complex multi-step reasoning across 60+ min videos |
+| `gemini-3.8-flash` | ✅ Supported | Static (1 FPS) | Ultra-fast timeline navigation (up to 2.1x faster), speculative frame exploration, interactive video triage |
+| `gemini-3.7-flash` | ✅ Supported | Static (1 FPS) | Dense visual QA, split-second action analysis, complex multi-step reasoning across 60+ min videos *(Default)* |
 | `gemini-3.6-flash` | ✅ Supported | Static (1 FPS) | General video Q&A, lecture summarization, timestamp indexing |
 | `gemini-3.5-flash-lite` | ✅ Supported | Static (1 FPS) | High-throughput, cost-sensitive transcript triage & metadata extraction |
 
@@ -161,7 +162,15 @@ When enabling Agentic Video (`media_processing="agentic"`), token reporting shif
 | Mode | Description | Supported Models | Token Efficiency | When to Use |
 | :--- | :--- | :--- | :--- | :--- |
 | **Static**<br>*(default)* | Single-pass ingestion at fixed **1 FPS** and **1 Kbps audio** with 1s timestamps. | All Gemini models | Baseline (~300 tokens/sec). Full ingestion required upfront. | • Clips < 2 min<br>• Requires simultaneous full audio & video<br>• Deterministic sampling<br>• Custom clipping (`start_offset`, `end_offset`) |
-| **Agentic** | Iterative timeline navigation; dynamically loads frames and audio on-demand. | `gemini-3.7-flash`<br>`gemini-3.6-flash`<br>`gemini-3.5-flash-lite` | **70%–95% reduction** on long footage; seconds TTFB for transcript queries. | • Videos > 2 min (lectures, meetings, calls)<br>• Verbal / audio-first queries<br>• Localized visual search<br>• Fast-action clips needing high FPS<br>• Cross-video comparisons |
+| **Agentic** | Iterative timeline navigation; dynamically loads frames and audio on-demand. | `gemini-3.8-flash`<br>`gemini-3.7-flash`<br>`gemini-3.6-flash`<br>`gemini-3.5-flash-lite` | **70%–95% reduction** on long footage; seconds TTFB for transcript queries. | • Videos > 2 min (lectures, meetings, calls)<br>• Verbal / audio-first queries<br>• Localized visual search<br>• Fast-action clips needing high FPS<br>• Cross-video comparisons |
+
+### Multi-Model Shootout (`compare --models`)
+Compare cross-generation performance (3.6 vs 3.7 vs 3.8) concurrently on the same video:
+
+```bash
+# Benchmark all Flash generations in parallel goroutines:
+./bin/gemini-agentic-video-go compare --models="flash"
+```
 
 ---
 

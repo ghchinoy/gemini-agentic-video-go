@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/ghchinoy/gemini-agentic-video-go/internal/catalog"
+	"github.com/ghchinoy/gemini-agentic-video-go/internal/runner"
 	"google.golang.org/genai"
 )
 
@@ -98,5 +99,59 @@ func TestRenderBadges(t *testing.T) {
 	staticBadge := RenderModeBadge(genai.MediaProcessingStatic)
 	if !strings.Contains(staticBadge, "STATIC") {
 		t.Errorf("RenderModeBadge(Static) = %q, want STATIC", staticBadge)
+	}
+}
+
+func TestRenderMultiModelTable(t *testing.T) {
+	results := []runner.ModelBenchmarkResult{
+		{
+			ModelID:  "gemini-3.6-flash",
+			Duration: 25 * time.Second,
+			Result: &runner.Result{
+				Usage: &genai.GenerateContentResponseUsageMetadata{
+					TotalTokenCount:      9000,
+					PromptTokenCount:     250,
+					CandidatesTokenCount: 500,
+					ThoughtsTokenCount:   5500,
+				},
+			},
+		},
+		{
+			ModelID:  "gemini-3.7-flash",
+			Duration: 22 * time.Second,
+			Result: &runner.Result{
+				Usage: &genai.GenerateContentResponseUsageMetadata{
+					TotalTokenCount:      8500,
+					PromptTokenCount:     250,
+					CandidatesTokenCount: 600,
+					ThoughtsTokenCount:   5000,
+				},
+			},
+		},
+		{
+			ModelID:  "gemini-3.8-flash",
+			Duration: 14 * time.Second,
+			Result: &runner.Result{
+				Usage: &genai.GenerateContentResponseUsageMetadata{
+					TotalTokenCount:      7800,
+					PromptTokenCount:     250,
+					CandidatesTokenCount: 700,
+					ThoughtsTokenCount:   4200,
+				},
+			},
+		},
+	}
+
+	out := RenderMultiModelTable(results)
+	if !strings.Contains(out, "gemini-3.6-flash") || !strings.Contains(out, "gemini-3.8-flash") {
+		t.Errorf("RenderMultiModelTable() missing model headers; output: %s", out)
+	}
+	if !strings.Contains(out, "7800") {
+		t.Errorf("RenderMultiModelTable() missing token counts; output: %s", out)
+	}
+
+	emptyOut := RenderMultiModelTable(nil)
+	if emptyOut != "" {
+		t.Errorf("RenderMultiModelTable(nil) = %q, want empty string", emptyOut)
 	}
 }

@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ghchinoy/gemini-agentic-video-go/internal/runner"
@@ -29,18 +30,19 @@ var (
 	comparePrompt     string
 	compareThinking   string
 	compareConcurrent bool
+	compareModels     string
 )
 
 // compareCmd represents the compare command
 var compareCmd = &cobra.Command{
 	Use:   "compare",
-	Short: "Benchmark Agentic vs. Static processing on the same video",
-	Long: `Executes the identical query using Agentic video navigation and Static 1 FPS
-frame ingestion, displaying an automated side-by-side performance comparison
-with net token spend reduction and latency metrics.
+	Short: "Benchmark processing modes (Agentic vs. Static) or models (3.6 vs 3.7 vs 3.8)",
+	Long: `Executes side-by-side performance comparisons on the same video:
 
-By default, runs both pipelines concurrently in parallel goroutines with a live
-side-by-side progress, elapsed time, and token counter.`,
+1. Mode Comparison (Default): Compares Agentic timeline navigation vs. Static 1 FPS
+   frame ingestion on a single model (gemini-3.7-flash by default).
+2. Model Comparison (--models): Compares multiple model generations (e.g. 3.6, 3.7, 3.8)
+   running Agentic video understanding concurrently in parallel goroutines.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
 		client, err := InitClient(ctx)
@@ -50,6 +52,27 @@ side-by-side progress, elapsed time, and token counter.`,
 
 		thinking := runner.ParseThinkingLevel(compareThinking)
 
+		// Multi-Model Benchmark branch
+		modelsList := resolveModelsList(compareModels)
+		if len(modelsList) > 1 {
+			tracker := ui.NewMultiModelTracker(modelsList)
+			tracker.Start()
+
+			results := runner.ExecuteMultiModelBenchmark(ctx, client, modelsList, runner.Request{
+				VideoURI:      compareVideoURI,
+				Prompt:        comparePrompt,
+				Mode:          genai.MediaProcessingAgentic,
+				ThinkingLevel: thinking,
+			}, func(mID string, done bool, res *runner.Result, err error) {
+				tracker.Update(mID, done, res, err)
+			})
+			tracker.Stop()
+
+			fmt.Println(ui.RenderMultiModelTable(results))
+			return nil
+		}
+
+		// Single Model: Concurrent Mode Benchmark (Agentic vs Static)
 		if compareConcurrent {
 			tracker := ui.NewBenchmarkTracker(compareThinking)
 			tracker.Start()
@@ -115,7 +138,7 @@ side-by-side progress, elapsed time, and token counter.`,
 			return fmt.Errorf("static run failed: %w", err)
 		}
 		fmt.Printf("    Static Run Complete (%v, %d tokens)\n\n",
-			sRes.Duration,
+			sRes.Duration.Round(time.Millisecond),
 			func() int32 {
 				if sRes.Usage != nil {
 					return sRes.Usage.TotalTokenCount
@@ -128,6 +151,33 @@ side-by-side progress, elapsed time, and token counter.`,
 	},
 }
 
+func resolveModelsList(flagVal string) []string {
+	if flagVal == "" {
+		return nil
+	}
+	raw := strings.Split(flagVal, ",")
+	var resolved []string
+	for _, item := range raw {
+		item = strings.TrimSpace(item)
+		if item == "" {
+			continue
+		}
+		switch strings.ToLower(item) {
+		case "flash", "all", "generations":
+			return []string{"gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.8-flash"}
+		case "3.6", "gemini-3.6":
+			resolved = append(resolved, "gemini-3.6-flash")
+		case "3.7", "gemini-3.7":
+			resolved = append(resolved, "gemini-3.7-flash")
+		case "3.8", "gemini-3.8":
+			resolved = append(resolved, "gemini-3.8-flash")
+		default:
+			resolved = append(resolved, item)
+		}
+	}
+	return resolved
+}
+
 func init() {
 	RootCmd.AddCommand(compareCmd)
 
@@ -135,4 +185,5 @@ func init() {
 	compareCmd.Flags().StringVar(&comparePrompt, "prompt", "What were the key revenue figures mentioned by the presenter, and at what timestamp do they appear?", "Prompt for comparison benchmark")
 	compareCmd.Flags().StringVar(&compareThinking, "thinking", "medium", "Thinking level: 'low', 'medium', or 'high'")
 	compareCmd.Flags().BoolVar(&compareConcurrent, "concurrent", true, "Execute Agentic and Static benchmarks concurrently in parallel goroutines with live telemetry")
+	compareCmd.Flags().StringVar(&compareModels, "models", "", "Compare across multiple models (e.g. 'flash' or 'gemini-3.6-flash,gemini-3.7-flash,gemini-3.8-flash')")
 }

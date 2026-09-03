@@ -188,6 +188,13 @@ genConfig := &genai.GenerateContentConfig{
 > [!NOTE]
 > `ThinkingLevelMinimal` is not supported on `gemini-3.7-flash` and returns an API validation error.
 
+### Model Architecture & Generation Selection
+| Model Generation | Recommended Use Case | Agentic Video Characteristics |
+| :--- | :--- | :--- |
+| **`gemini-3.8-flash`** | Interactive chat, latency-sensitive triage, short-form clips | **Fastest timeline navigation** (up to 2.1x faster wall-clock speed). Optimized speculative frame fetching and lower reasoning token budgets. |
+| **`gemini-3.7-flash`** | Long-form presentation Q&A, detailed transcript cross-referencing | **Deep reasoning**. Balances thorough internal `load_video` seeks with comprehensive, granular timestamp citations. *(Default)* |
+| **`gemini-3.6-flash`** | Baseline batch workloads, cost-constrained pipelines | **Cost-effective baseline**. Established first-generation agentic navigation tool implementation. |
+
 ---
 
 ## 5. Multi-Video Comparative Synthesis

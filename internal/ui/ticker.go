@@ -17,6 +17,7 @@ package ui
 import (
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -217,6 +218,201 @@ func (bt *BenchmarkTracker) redraw(isFinal bool) {
 }
 
 func (bt *BenchmarkTracker) formatElapsed(d time.Duration) string {
+	d = d.Round(100 * time.Millisecond)
+	m := int(d.Minutes())
+	s := int(d.Seconds()) % 60
+	ms := int(d.Milliseconds()) % 1000 / 100
+	return fmt.Sprintf("%02d:%02d.%d", m, s, ms)
+}
+
+// MultiModelState stores progress for a specific model during a multi-model shootout.
+type MultiModelState struct {
+	ModelID  string
+	Done     bool
+	Result   *runner.Result
+	Error    error
+	Duration time.Duration
+}
+
+// MultiModelTracker tracks live concurrent execution across multiple models simultaneously.
+type MultiModelTracker struct {
+	isTTY        bool
+	startTime    time.Time
+	mu           sync.Mutex
+	models       []*MultiModelState
+	modelMap     map[string]*MultiModelState
+	stopChan     chan struct{}
+	doneChan     chan struct{}
+	hasDrawnOnce bool
+}
+
+// NewMultiModelTracker creates a tracker for multi-model concurrent execution.
+func NewMultiModelTracker(modelIDs []string) *MultiModelTracker {
+	fd := os.Stdout.Fd()
+	isTerminal := isatty.IsTerminal(fd) || isatty.IsCygwinTerminal(fd)
+
+	tracker := &MultiModelTracker{
+		isTTY:     isTerminal,
+		modelMap:  make(map[string]*MultiModelState),
+		stopChan:  make(chan struct{}),
+		doneChan:  make(chan struct{}),
+		startTime: time.Now(),
+	}
+
+	for _, mID := range modelIDs {
+		state := &MultiModelState{ModelID: mID}
+		tracker.models = append(tracker.models, state)
+		tracker.modelMap[mID] = state
+	}
+
+	return tracker
+}
+
+// Start initiates the live 100ms multi-model terminal tracker.
+func (mt *MultiModelTracker) Start() {
+	mt.startTime = time.Now()
+
+	fmt.Println(SectionHeader.Render("🏎️  MULTI-MODEL AGENTIC VIDEO SHOOTOUT (Parallel Goroutines)"))
+	if !mt.isTTY {
+		fmt.Printf("[%s] %d models dispatched concurrently in parallel goroutines...\n", mt.formatElapsed(0), len(mt.models))
+		return
+	}
+
+	go func() {
+		defer close(mt.doneChan)
+		ticker := time.NewTicker(100 * time.Millisecond)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-mt.stopChan:
+				mt.redraw(true)
+				return
+			case <-ticker.C:
+				mt.redraw(false)
+			}
+		}
+	}()
+}
+
+// Update records completion or error for a specific model.
+func (mt *MultiModelTracker) Update(modelID string, done bool, res *runner.Result, err error) {
+	mt.mu.Lock()
+	defer mt.mu.Unlock()
+
+	state, ok := mt.modelMap[modelID]
+	if !ok {
+		return
+	}
+
+	if done && !state.Done {
+		state.Done = true
+		state.Result = res
+		state.Error = err
+		if res != nil {
+			state.Duration = res.Duration
+		}
+
+		if !mt.isTTY {
+			tokStr := "0"
+			if res != nil && res.Usage != nil {
+				tokStr = fmt.Sprintf("%d", res.Usage.TotalTokenCount)
+			}
+			if err != nil {
+				fmt.Printf("[%s] ❌ %s FAILED: %v\n", mt.formatElapsed(time.Since(mt.startTime)), modelID, err)
+			} else {
+				fmt.Printf("[%s] ✅ %s COMPLETED in %v (Tokens: %s)\n",
+					mt.formatElapsed(time.Since(mt.startTime)),
+					modelID,
+					res.Duration.Round(time.Millisecond),
+					tokStr)
+			}
+		}
+	}
+}
+
+// Stop terminates the ticker loop.
+func (mt *MultiModelTracker) Stop() {
+	if !mt.isTTY {
+		return
+	}
+	close(mt.stopChan)
+	<-mt.doneChan
+	fmt.Println()
+}
+
+func (mt *MultiModelTracker) redraw(isFinal bool) {
+	mt.mu.Lock()
+	defer mt.mu.Unlock()
+
+	elapsed := time.Since(mt.startTime).Round(100 * time.Millisecond)
+	numLines := len(mt.models)
+	if numLines == 0 {
+		return
+	}
+
+	var outputLines []string
+	for _, m := range mt.models {
+		var status, details string
+		if m.Error != nil {
+			status = badgeFailed
+			details = MutedStyle.Render(fmt.Sprintf("Error: %v", m.Error))
+		} else if m.Done && m.Result != nil {
+			status = badgeCompleted
+			toks := int32(0)
+			if m.Result.Usage != nil {
+				toks = m.Result.Usage.TotalTokenCount
+			}
+			details = fmt.Sprintf("%-7s • %s tokens %s",
+				GreenStyle.Render(fmt.Sprintf("%v", m.Duration.Round(time.Millisecond))),
+				BoldWhite.Render(fmt.Sprintf("%d", toks)),
+				MutedStyle.Render("(dynamic frame inspection)"),
+			)
+		} else {
+			status = badgeRunning
+			details = fmt.Sprintf("%-7s • %s",
+				CyanStyle.Render(fmt.Sprintf("%v", elapsed)),
+				MutedStyle.Render("seeking & inspecting timeline chunks..."),
+			)
+		}
+
+		icon := "🔷"
+		if strings.Contains(m.ModelID, "3.8") {
+			icon = "🚀"
+		} else if strings.Contains(m.ModelID, "3.7") {
+			icon = "⚡"
+		}
+
+		line := fmt.Sprintf("  %s %-18s %s  %s", icon, m.ModelID, status, details)
+		outputLines = append(outputLines, line)
+	}
+
+	if mt.hasDrawnOnce {
+		for i, line := range outputLines {
+			if i == 0 {
+				fmt.Print("\033[2K\r" + line + "\n")
+			} else {
+				fmt.Print("\033[2K\r" + line + "\n")
+			}
+		}
+		fmt.Printf("\033[%dA", numLines)
+	} else {
+		for _, line := range outputLines {
+			fmt.Println(line)
+		}
+		fmt.Printf("\033[%dA", numLines)
+		mt.hasDrawnOnce = true
+	}
+
+	if isFinal {
+		for i := 0; i < numLines; i++ {
+			fmt.Println()
+		}
+		fmt.Println()
+	}
+}
+
+func (mt *MultiModelTracker) formatElapsed(d time.Duration) string {
 	d = d.Round(100 * time.Millisecond)
 	m := int(d.Minutes())
 	s := int(d.Seconds()) % 60

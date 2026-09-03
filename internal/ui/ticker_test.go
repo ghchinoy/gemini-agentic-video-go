@@ -62,3 +62,43 @@ func TestBenchmarkTrackerFormatElapsed(t *testing.T) {
 		t.Errorf("formatElapsed(65.4s) = %q, want %q", got, want)
 	}
 }
+
+func TestMultiModelTrackerLifecycle(t *testing.T) {
+	models := []string{"gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.8-flash"}
+	tracker := NewMultiModelTracker(models)
+	if tracker == nil {
+		t.Fatalf("NewMultiModelTracker() = nil, want valid tracker")
+	}
+
+	tracker.isTTY = false
+	tracker.Start()
+
+	// Update first model
+	tracker.Update("gemini-3.8-flash", true, &runner.Result{
+		Title:    "gemini-3.8-flash",
+		Duration: 12 * time.Second,
+		Usage: &genai.GenerateContentResponseUsageMetadata{
+			TotalTokenCount: 7500,
+		},
+	}, nil)
+
+	// Update second model
+	tracker.Update("gemini-3.7-flash", true, &runner.Result{
+		Title:    "gemini-3.7-flash",
+		Duration: 18 * time.Second,
+		Usage: &genai.GenerateContentResponseUsageMetadata{
+			TotalTokenCount: 8200,
+		},
+	}, nil)
+
+	// Update third model
+	tracker.Update("gemini-3.6-flash", true, &runner.Result{
+		Title:    "gemini-3.6-flash",
+		Duration: 22 * time.Second,
+		Usage: &genai.GenerateContentResponseUsageMetadata{
+			TotalTokenCount: 9100,
+		},
+	}, nil)
+
+	tracker.Stop()
+}

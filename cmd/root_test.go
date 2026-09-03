@@ -41,3 +41,29 @@ func TestRunCommandRequiredFlags(t *testing.T) {
 		t.Errorf("runCmd.RunE() with empty video URI = nil, want error")
 	}
 }
+
+func TestResolveModelsList(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected []string
+	}{
+		{"", nil},
+		{"flash", []string{"gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.8-flash"}},
+		{"all", []string{"gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.8-flash"}},
+		{"3.6,3.8", []string{"gemini-3.6-flash", "gemini-3.8-flash"}},
+		{"gemini-3.7-flash,gemini-3.8-flash", []string{"gemini-3.7-flash", "gemini-3.8-flash"}},
+	}
+
+	for _, tt := range tests {
+		got := resolveModelsList(tt.input)
+		if len(got) != len(tt.expected) {
+			t.Errorf("resolveModelsList(%q) len = %d, want %d", tt.input, len(got), len(tt.expected))
+			continue
+		}
+		for i := range got {
+			if got[i] != tt.expected[i] {
+				t.Errorf("resolveModelsList(%q)[%d] = %q, want %q", tt.input, i, got[i], tt.expected[i])
+			}
+		}
+	}
+}

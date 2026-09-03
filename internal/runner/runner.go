@@ -72,6 +72,17 @@ type BenchmarkResult struct {
 // BenchmarkProgressCallback receives updates when individual benchmark pipelines complete.
 type BenchmarkProgressCallback func(agenticDone, staticDone bool, aRes, sRes *Result)
 
+// ModelBenchmarkResult captures the execution output for a specific model.
+type ModelBenchmarkResult struct {
+	ModelID  string
+	Result   *Result
+	Error    error
+	Duration time.Duration
+}
+
+// ModelProgressCallback receives updates when an individual model run finishes.
+type ModelProgressCallback func(modelID string, done bool, res *Result, err error)
+
 // Execute performs a single-video understanding request.
 func Execute(ctx context.Context, client *genai.Client, req Request) (*Result, error) {
 	mimeType := req.MIMEType
@@ -266,6 +277,48 @@ func ExecuteConcurrentBenchmark(
 	wg.Wait()
 	res.TotalWallClock = time.Since(start)
 	return res
+}
+
+// ExecuteMultiModelBenchmark runs identical queries across multiple models in parallel goroutines.
+func ExecuteMultiModelBenchmark(
+	ctx context.Context,
+	client *genai.Client,
+	modelIDs []string,
+	req Request,
+	callback ModelProgressCallback,
+) []ModelBenchmarkResult {
+	results := make([]ModelBenchmarkResult, len(modelIDs))
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
+	for i, mID := range modelIDs {
+		wg.Add(1)
+		idx := i
+		modelID := mID
+		go func() {
+			defer wg.Done()
+			modelReq := req
+			modelReq.ModelID = modelID
+			mStart := time.Now()
+			res, err := Execute(ctx, client, modelReq)
+			mDur := time.Since(mStart)
+
+			mu.Lock()
+			results[idx] = ModelBenchmarkResult{
+				ModelID:  modelID,
+				Result:   res,
+				Error:    err,
+				Duration: mDur,
+			}
+			if callback != nil {
+				callback(modelID, true, res, err)
+			}
+			mu.Unlock()
+		}()
+	}
+
+	wg.Wait()
+	return results
 }
 
 // ParseThinkingLevel maps string representation to genai.ThinkingLevel.

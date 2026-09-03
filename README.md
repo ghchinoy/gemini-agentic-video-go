@@ -73,6 +73,10 @@ Run a side-by-side performance benchmark comparing Agentic vs. Static (1 FPS) pr
 make compare
 # or: ./bin/gemini-agentic-video-go compare
 # sequential fallback: ./bin/gemini-agentic-video-go compare --concurrent=false
+
+# Compare across model generations (3.6 vs 3.7 vs 3.8) in parallel goroutines:
+./bin/gemini-agentic-video-go compare --models="flash"
+# or: ./bin/gemini-agentic-video-go compare --models="gemini-3.6-flash,gemini-3.7-flash,gemini-3.8-flash"
 ```
 
 Compare two videos in a single prompt (multi-video comparative synthesis):
