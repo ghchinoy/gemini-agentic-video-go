@@ -19,7 +19,7 @@ An idiomatic Go reference implementation and interactive CLI demonstrating [Gemi
   - [Setup and Running](#setup-and-running)
   - [Makefile Targets](#makefile-targets)
   - [CLI Flags](#cli-flags)
-- [Publishing](#publishing)
+  - [Cross-Compilation](#cross-compilation)
 - [Contributing](#contributing)
 - [License](#license)
 - [Deep Dive Documentation](#deep-dive-documentation)
@@ -94,10 +94,10 @@ make multiturn
 # or: ./bin/gemini-agentic-video-go multiturn
 ```
 
-Switch models (e.g. `gemini-3.6-flash` or `gemini-3.5-flash-lite`):
+Switch models (e.g. `gemini-3.8-flash`, `gemini-3.6-flash`, or `gemini-3.5-flash-lite`):
 
 ```bash
-./bin/gemini-agentic-video-go example 1 --model=gemini-3.6-flash
+./bin/gemini-agentic-video-go example 1 --model=gemini-3.8-flash
 ```
 
 Execute an ad-hoc query against any custom YouTube URL or Google Cloud Storage URI:
@@ -213,16 +213,9 @@ make run
 | `-l, --location` | `"global"` | GCP Location / Region (defaults to `GOOGLE_CLOUD_LOCATION` or `"global"`) |
 | `-b, --backend` | `"enterprise"` | Client backend: `enterprise`, `vertex`, or `gemini` (API key) |
 
-## Publishing
+### Cross-Compilation
 
-To publish a new tagged release:
-
-```bash
-git tag v0.2.0
-git push origin v0.2.0
-```
-
-To cross-compile binaries for distribution:
+To cross-compile binaries for other platforms:
 
 ```bash
 # Linux AMD64

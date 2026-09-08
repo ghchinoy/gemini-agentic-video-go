@@ -24,7 +24,7 @@ A comprehensive, code-first guide to building production applications, microserv
 Agentic Video Understanding transforms how multimodal models process video:
 
 - **Static Ingestion (Traditional)**: Decodes all video frames upfront at 1 FPS (~300 tokens per second of video). An hour of video costs ~1,000,000 tokens before reasoning begins.
-- **Agentic Navigation (Native Gemini 3.7 / 3.6)**: The model receives **0 video frames** in the initial prompt. It is equipped with an internal `load_video` tool that dynamically seeks, scrubs, and inspects video timestamps on demand in an autonomous **Think ➔ Act ➔ Observe** loop.
+- **Agentic Navigation (Native Gemini 3.8 / 3.7 / 3.6)**: The model receives **0 video frames** in the initial prompt. It is equipped with an internal `load_video` tool that dynamically seeks, scrubs, and inspects video timestamps on demand in an autonomous **Think ➔ Act ➔ Observe** loop.
 
 ```mermaid
 sequenceDiagram
