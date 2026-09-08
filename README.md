@@ -1,6 +1,6 @@
 # gemini-agentic-video-go
 
-A Go CLI application demonstrating [Gemini agentic video understanding](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/capabilities/video-understanding) with active Think ➔ Act ➔ Observe dynamic timeline navigation, sub-second precision, and up to 96% token reduction compared to static frame ingestion.
+An idiomatic Go reference implementation and interactive CLI demonstrating [Gemini agentic video understanding](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/capabilities/video-understanding) with the official Google GenAI SDK (`google.golang.org/genai`). Provides reusable Go patterns, backend client factories, and production code examples (single-video, multi-video synthesis, multi-turn dialogue, token telemetry) alongside an interactive CLI tool—featuring active Think ➔ Act ➔ Observe dynamic timeline navigation, sub-second precision, and up to 96% token reduction compared to static frame ingestion.
 
 [![Go Version](https://img.shields.io/badge/Go-1.24+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
