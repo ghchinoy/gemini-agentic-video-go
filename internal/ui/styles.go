@@ -18,69 +18,97 @@
 package ui
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 	"google.golang.org/genai"
 )
 
+// Colors used across terminal UI components.
 var (
-	// Google & Gemini Branding Palette
-	ColorGeminiBlue    = lipgloss.Color("#4285F4") // Google Blue
-	ColorGeminiCyan    = lipgloss.Color("#00C4FF") // Gemini Sparkle Cyan
-	ColorAgenticPurple = lipgloss.Color("#8E44AD") // Agentic Reasoning Purple
-	ColorSuccess       = lipgloss.Color("#34A853") // Google Green
-	ColorWarning       = lipgloss.Color("#FBBC05") // Google Amber
-	ColorDanger        = lipgloss.Color("#EA4335") // Google Red
-	ColorMuted         = lipgloss.Color("#70757A") // Google Medium Gray
-	ColorDim           = lipgloss.Color("#3C4043") // Google Dark Slate
-	ColorWhite         = lipgloss.Color("#FFFFFF")
-	ColorZebraBg       = lipgloss.Color("#1A1D24") // Subtle dark row background
+	// ColorGeminiBlue is the Google/Gemini primary blue branding color.
+	ColorGeminiBlue = lipgloss.Color("#4285F4")
+	// ColorGeminiCyan is the Gemini sparkle cyan accent color.
+	ColorGeminiCyan = lipgloss.Color("#00C4FF")
+	// ColorAgenticPurple is the purple highlight representing agentic reasoning.
+	ColorAgenticPurple = lipgloss.Color("#8E44AD")
+	// ColorSuccess is the green color for completions and positive deltas.
+	ColorSuccess = lipgloss.Color("#34A853")
+	// ColorWarning is the amber color for static processing and warnings.
+	ColorWarning = lipgloss.Color("#FBBC05")
+	// ColorDanger is the red color for errors and failures.
+	ColorDanger = lipgloss.Color("#EA4335")
+	// ColorMuted is medium gray for secondary notes and labels.
+	ColorMuted = lipgloss.Color("#70757A")
+	// ColorDim is dark slate for minimal contrast elements.
+	ColorDim = lipgloss.Color("#3C4043")
+	// ColorWhite is pure white.
+	ColorWhite = lipgloss.Color("#FFFFFF")
+	// ColorZebraBg is the subtle dark background for alternating table rows.
+	ColorZebraBg = lipgloss.Color("#1A1D24")
+)
 
-	// Typography & Container Styles
+// UI and typography styles used across terminal renderers.
+var (
+	// TitleStyle formats application banners.
 	TitleStyle = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(ColorWhite).
 			Background(ColorGeminiBlue).
 			Padding(0, 1)
 
+	// SubtitleStyle formats headers and card titles.
 	SubtitleStyle = lipgloss.NewStyle().
 			Foreground(ColorGeminiCyan).
 			Bold(true)
 
+	// HeaderBox defines the border container for the main banner.
 	HeaderBox = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(ColorGeminiBlue).
 			Padding(0, 1).
 			MarginBottom(1)
 
+	// CardBox defines the container border for telemetry cards.
 	CardBox = lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(ColorMuted).
 		Padding(0, 1).
 		MarginBottom(1)
 
+	// SectionHeader formats section divider headers.
 	SectionHeader = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(ColorGeminiCyan).
 			MarginTop(1).
 			MarginBottom(0)
 
+	// MutedStyle styles secondary text in medium gray.
 	MutedStyle = lipgloss.NewStyle().Foreground(ColorMuted)
-	BoldWhite  = lipgloss.NewStyle().Bold(true).Foreground(ColorWhite)
+	// BoldWhite styles highlighted text in bold white.
+	BoldWhite = lipgloss.NewStyle().Bold(true).Foreground(ColorWhite)
+	// GreenStyle styles success messages in bold green.
 	GreenStyle = lipgloss.NewStyle().Foreground(ColorSuccess).Bold(true)
-	CyanStyle  = lipgloss.NewStyle().Foreground(ColorGeminiCyan).Bold(true)
+	// CyanStyle styles accents in bold cyan.
+	CyanStyle = lipgloss.NewStyle().Foreground(ColorGeminiCyan).Bold(true)
 
-	// Mode Badges
-	BadgeAgentic    = lipgloss.NewStyle().Bold(true).Foreground(ColorWhite).Background(ColorAgenticPurple).Padding(0, 1)
-	BadgeStatic     = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#000000")).Background(ColorWarning).Padding(0, 1)
+	// BadgeAgentic formats the AGENTIC mode badge.
+	BadgeAgentic = lipgloss.NewStyle().Bold(true).Foreground(ColorWhite).Background(ColorAgenticPurple).Padding(0, 1)
+	// BadgeStatic formats the STATIC mode badge.
+	BadgeStatic = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#000000")).Background(ColorWarning).Padding(0, 1)
+	// BadgeMultiVideo formats the MULTI-VIDEO mode badge.
 	BadgeMultiVideo = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#000000")).Background(ColorGeminiCyan).Padding(0, 1)
-	BadgeMultiTurn  = lipgloss.NewStyle().Bold(true).Foreground(ColorWhite).Background(ColorSuccess).Padding(0, 1)
+	// BadgeMultiTurn formats the MULTI-TURN mode badge.
+	BadgeMultiTurn = lipgloss.NewStyle().Bold(true).Foreground(ColorWhite).Background(ColorSuccess).Padding(0, 1)
 
-	// Thinking Badges
-	BadgeThinkingHigh    = lipgloss.NewStyle().Bold(true).Foreground(ColorWhite).Background(lipgloss.Color("#B02A37")).Padding(0, 1)
-	BadgeThinkingMedium  = lipgloss.NewStyle().Bold(true).Foreground(ColorWhite).Background(lipgloss.Color("#0D6EFD")).Padding(0, 1)
-	BadgeThinkingLow     = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#000000")).Background(lipgloss.Color("#6C757D")).Padding(0, 1)
+	// BadgeThinkingHigh formats the high thinking level badge.
+	BadgeThinkingHigh = lipgloss.NewStyle().Bold(true).Foreground(ColorWhite).Background(lipgloss.Color("#B02A37")).Padding(0, 1)
+	// BadgeThinkingMedium formats the medium thinking level badge.
+	BadgeThinkingMedium = lipgloss.NewStyle().Bold(true).Foreground(ColorWhite).Background(lipgloss.Color("#0D6EFD")).Padding(0, 1)
+	// BadgeThinkingLow formats the low thinking level badge.
+	BadgeThinkingLow = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#000000")).Background(lipgloss.Color("#6C757D")).Padding(0, 1)
+	// BadgeThinkingMinimal formats the minimal thinking level badge.
 	BadgeThinkingMinimal = lipgloss.NewStyle().Bold(true).Foreground(ColorWhite).Background(ColorDim).Padding(0, 1)
 )
 
@@ -122,16 +150,16 @@ func RenderThinkingBadge(level genai.ThinkingLevel) string {
 
 // RenderTurnBadge formats a conversational turn marker.
 func RenderTurnBadge(turnNum, totalTurns int) string {
-	label := "Turn " + string(rune('0'+turnNum))
+	label := fmt.Sprintf("Turn %d", turnNum)
 	if totalTurns > 0 {
-		label = label + "/" + string(rune('0'+totalTurns))
+		label = fmt.Sprintf("Turn %d/%d", turnNum, totalTurns)
 	}
 	return lipgloss.NewStyle().Bold(true).Foreground(ColorWhite).Background(ColorAgenticPurple).Padding(0, 1).Render(label)
 }
 
 // RenderVideoBadge formats a multi-video index badge.
 func RenderVideoBadge(index int, label string) string {
-	text := "Video " + string(rune('0'+index))
+	text := fmt.Sprintf("Video %d", index)
 	if label != "" {
 		text = text + " (" + strings.ToUpper(label) + ")"
 	}

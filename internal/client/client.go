@@ -61,9 +61,10 @@ func NewClient(ctx context.Context, cfg Config) (*genai.Client, error) {
 		if apiKey == "" {
 			apiKey = os.Getenv("GOOGLE_API_KEY")
 		}
-		if apiKey != "" {
-			clientCfg.APIKey = apiKey
+		if apiKey == "" {
+			return nil, fmt.Errorf("API key required for Gemini API backend; set GEMINI_API_KEY or GOOGLE_API_KEY")
 		}
+		clientCfg.APIKey = apiKey
 	default:
 		return nil, fmt.Errorf("unsupported backend %q; use 'enterprise', 'vertex', or 'gemini'", cfg.Backend)
 	}

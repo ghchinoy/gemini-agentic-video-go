@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -54,12 +55,14 @@ analysis, YouTube Shorts, multi-video synthesis, and multi-turn conversations.`,
 		}
 
 		if target == "all" {
+			var errs []error
 			for _, sc := range catalog.Scenarios {
 				if err := runScenario(ctx, client, sc); err != nil {
 					fmt.Fprintf(os.Stderr, "Scenario %d failed: %v\n", sc.ID, err)
+					errs = append(errs, fmt.Errorf("scenario %d (%s): %w", sc.ID, sc.Name, err))
 				}
 			}
-			return nil
+			return errors.Join(errs...)
 		}
 
 		id, err := strconv.Atoi(target)

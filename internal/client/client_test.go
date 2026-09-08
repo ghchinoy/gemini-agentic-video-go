@@ -15,53 +15,126 @@
 package client
 
 import (
-	"os"
 	"testing"
 )
 
 func TestResolveLocation(t *testing.T) {
 	tests := []struct {
-		name     string
-		flagVal  string
-		envLoc   string
-		expected string
+		name      string
+		flagVal   string
+		envLoc    string
+		envRegion string
+		want      string
 	}{
 		{
-			name:     "flag_provided",
-			flagVal:  "us-central1",
-			expected: "us-central1",
+			name:    "flag_provided",
+			flagVal: "us-central1",
+			want:    "us-central1",
 		},
 		{
-			name:     "env_location_set",
-			flagVal:  "",
-			envLoc:   "europe-west1",
-			expected: "europe-west1",
+			name:    "env_location_set",
+			flagVal: "",
+			envLoc:  "europe-west1",
+			want:    "europe-west1",
 		},
 		{
-			name:     "fallback_to_global",
-			flagVal:  "",
-			expected: "global",
+			name:      "env_region_set",
+			flagVal:   "",
+			envRegion: "asia-east1",
+			want:      "asia-east1",
+		},
+		{
+			name:    "fallback_to_global",
+			flagVal: "",
+			want:    "global",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.envLoc != "" {
-				os.Setenv("GOOGLE_CLOUD_LOCATION", tt.envLoc)
-				defer os.Unsetenv("GOOGLE_CLOUD_LOCATION")
-			}
+			t.Setenv("GOOGLE_CLOUD_LOCATION", tt.envLoc)
+			t.Setenv("GOOGLE_CLOUD_REGION", tt.envRegion)
+
 			got := ResolveLocation(tt.flagVal)
-			if got != tt.expected {
-				t.Errorf("ResolveLocation(%q) = %q, want %q", tt.flagVal, got, tt.expected)
+			if got != tt.want {
+				t.Errorf("ResolveLocation(%q) = %q, want %q", tt.flagVal, got, tt.want)
 			}
 		})
 	}
 }
 
 func TestResolveProject(t *testing.T) {
-	input := "custom-project"
-	got := ResolveProject(input)
-	if got != input {
-		t.Errorf("ResolveProject(%q) = %q, want %q", input, got, input)
+	tests := []struct {
+		name       string
+		flagVal    string
+		envProject string
+		want       string
+	}{
+		{
+			name:    "flag_provided",
+			flagVal: "custom-project",
+			want:    "custom-project",
+		},
+		{
+			name:       "env_project_set",
+			flagVal:    "",
+			envProject: "env-project",
+			want:       "env-project",
+		},
+		{
+			name:       "placeholder_flag_uses_env",
+			flagVal:    "[your-project-id]",
+			envProject: "env-project",
+			want:       "env-project",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("GOOGLE_CLOUD_PROJECT", tt.envProject)
+
+			got := ResolveProject(tt.flagVal)
+			if got != tt.want {
+				t.Errorf("ResolveProject(%q) = %q, want %q", tt.flagVal, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNewClient_BackendValidation(t *testing.T) {
+	ctx := t.Context()
+
+	tests := []struct {
+		name string
+		cfg  Config
+	}{
+		{
+			name: "enterprise_missing_project",
+			cfg:  Config{Backend: "enterprise", Project: ""},
+		},
+		{
+			name: "vertex_missing_project",
+			cfg:  Config{Backend: "vertex", Project: ""},
+		},
+		{
+			name: "gemini_missing_api_key",
+			cfg:  Config{Backend: "gemini", APIKey: ""},
+		},
+		{
+			name: "unsupported_backend",
+			cfg:  Config{Backend: "unsupported"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("GEMINI_API_KEY", "")
+			t.Setenv("GOOGLE_API_KEY", "")
+
+			_, err := NewClient(ctx, tt.cfg)
+			if err == nil {
+				t.Errorf("NewClient(ctx, %+v) error = nil, want non-nil error", tt.cfg)
+			}
+		})
 	}
 }

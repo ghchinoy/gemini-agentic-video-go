@@ -23,6 +23,7 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 	"github.com/ghchinoy/gemini-agentic-video-go/internal/catalog"
 	"github.com/ghchinoy/gemini-agentic-video-go/internal/runner"
+	"github.com/ghchinoy/gemini-agentic-video-go/internal/telemetry"
 	"google.golang.org/genai"
 )
 
@@ -101,10 +102,7 @@ func RenderBenchmarkTable(agenticUsage, staticUsage *genai.GenerateContentRespon
 		staticThoughts = staticUsage.ThoughtsTokenCount
 	}
 
-	var tokenDeltaPct float64
-	if staticTotal > 0 {
-		tokenDeltaPct = float64(staticTotal-agenticTotal) / float64(staticTotal) * 100.0
-	}
+	tokenDeltaPct := telemetry.TokenReductionPct(agenticTotal, staticTotal)
 
 	headerStyle := lipgloss.NewStyle().
 		Bold(true).

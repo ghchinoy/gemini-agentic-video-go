@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// gemini-agentic-video-go provides a CLI for exploring video understanding
-// using Google GenAI SDK and Gemini's native agentic timeline exploration.
+// Command gemini-agentic-video-go provides a CLI for exploring Gemini
+// agentic video understanding with active timeline navigation.
 package main
 
 import (

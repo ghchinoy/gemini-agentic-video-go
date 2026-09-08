@@ -251,12 +251,12 @@ func ExecuteConcurrentBenchmark(
 	// Goroutine 1: Agentic Processing
 	go func() {
 		defer wg.Done()
-		aResult, aErr := Execute(ctx, client, agenticReq)
+		agenticResult, agenticErr := Execute(ctx, client, agenticReq)
 		mu.Lock()
-		res.AgenticResult = aResult
-		res.AgenticError = aErr
+		res.AgenticResult = agenticResult
+		res.AgenticError = agenticErr
 		if callback != nil {
-			callback(true, res.StaticResult != nil || res.StaticError != nil, aResult, res.StaticResult)
+			callback(true, res.StaticResult != nil || res.StaticError != nil, agenticResult, res.StaticResult)
 		}
 		mu.Unlock()
 	}()
@@ -264,12 +264,12 @@ func ExecuteConcurrentBenchmark(
 	// Goroutine 2: Static 1-FPS Processing
 	go func() {
 		defer wg.Done()
-		sResult, sErr := Execute(ctx, client, staticReq)
+		staticResult, staticErr := Execute(ctx, client, staticReq)
 		mu.Lock()
-		res.StaticResult = sResult
-		res.StaticError = sErr
+		res.StaticResult = staticResult
+		res.StaticError = staticErr
 		if callback != nil {
-			callback(res.AgenticResult != nil || res.AgenticError != nil, true, res.AgenticResult, sResult)
+			callback(res.AgenticResult != nil || res.AgenticError != nil, true, res.AgenticResult, staticResult)
 		}
 		mu.Unlock()
 	}()

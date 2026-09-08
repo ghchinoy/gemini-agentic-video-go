@@ -119,12 +119,7 @@ var compareCmd = &cobra.Command{
 		}
 		fmt.Printf("    Agentic Run Complete (%v, %d tokens)\n\n",
 			aRes.Duration.Round(time.Millisecond),
-			func() int32 {
-				if aRes.Usage != nil {
-					return aRes.Usage.TotalTokenCount
-				}
-				return 0
-			}())
+			totalTokens(aRes))
 
 		fmt.Println(">>> Step 2/2: Executing with STATIC 1-FPS frame ingestion...")
 		sRes, err := runner.Execute(ctx, client, runner.Request{
@@ -139,16 +134,18 @@ var compareCmd = &cobra.Command{
 		}
 		fmt.Printf("    Static Run Complete (%v, %d tokens)\n\n",
 			sRes.Duration.Round(time.Millisecond),
-			func() int32 {
-				if sRes.Usage != nil {
-					return sRes.Usage.TotalTokenCount
-				}
-				return 0
-			}())
+			totalTokens(sRes))
 
 		fmt.Println(ui.RenderBenchmarkTable(aRes.Usage, sRes.Usage, aRes.Duration, sRes.Duration))
 		return nil
 	},
+}
+
+func totalTokens(res *runner.Result) int32 {
+	if res != nil && res.Usage != nil {
+		return res.Usage.TotalTokenCount
+	}
+	return 0
 }
 
 func resolveModelsList(flagVal string) []string {

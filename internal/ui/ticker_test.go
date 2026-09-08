@@ -55,11 +55,11 @@ func TestBenchmarkTrackerLifecycle(t *testing.T) {
 }
 
 func TestBenchmarkTrackerFormatElapsed(t *testing.T) {
-	tracker := NewBenchmarkTracker("medium")
-	got := tracker.formatElapsed(65400 * time.Millisecond)
+	dur := 65400 * time.Millisecond
+	got := FormatElapsed(dur)
 	want := "01:05.4"
 	if got != want {
-		t.Errorf("formatElapsed(65.4s) = %q, want %q", got, want)
+		t.Errorf("FormatElapsed(%v) = %q, want %q", dur, got, want)
 	}
 }
 

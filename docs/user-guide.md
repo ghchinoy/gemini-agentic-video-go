@@ -251,7 +251,7 @@ Try the built-in multi-turn demonstration:
    - `HIGH`: Dense visual QA, split-second action/sports analysis, or complex multi-step reasoning across 60+ min videos.
    - `MEDIUM` (Default): Optimal balance of latency, cost, and retrieval quality for general video Q&A, meeting summaries, and timestamp indexing.
    - `LOW`: Fast transcript/caption searches and metadata extraction.
-   - *Note: `thinking_level="minimal"` is unsupported on Gemini 3.7 Flash and returns an API validation error.*
+   - *Note: `thinking_level="minimal"` is not supported on `gemini-3.7-flash` and returns an API validation error.*
 
 ---
 
@@ -279,7 +279,7 @@ gemini-agentic-video-go [command] [flags]
 ```
 
 ### Global Flags
-- `-m, --model string`: Model ID (default `"gemini-3.7-flash"`; supports `"gemini-3.6-flash"`, `"gemini-3.5-flash-lite"`).
+- `-m, --model string`: Model ID (default `"gemini-3.7-flash"`; supports `"gemini-3.8-flash"`, `"gemini-3.7-flash"`, `"gemini-3.6-flash"`, `"gemini-3.5-flash-lite"`).
 - `-p, --project string`: Google Cloud project ID (defaults to `GOOGLE_CLOUD_PROJECT` or active `gcloud` config).
 - `-l, --location string`: Location / region (defaults to `GOOGLE_CLOUD_LOCATION` or `"global"`).
 - `-b, --backend string`: Backend: `"enterprise"` (default), `"vertex"`, or `"gemini"` (API key).

@@ -116,7 +116,7 @@ func NewClient(ctx context.Context, cfg Config) (*genai.Client, error) {
 			apiKey = os.Getenv("GOOGLE_API_KEY")
 		}
 		if apiKey == "" {
-			return nil, fmt.Errorf("API key required for Gemini API backend; set GEMINI_API_KEY")
+			return nil, fmt.Errorf("API key required for Gemini API backend; set GEMINI_API_KEY or GOOGLE_API_KEY")
 		}
 		clientCfg.APIKey = apiKey
 	default:
@@ -353,6 +353,9 @@ func LogTelemetry(usage *genai.GenerateContentResponseUsageMetadata, mode genai.
 		fmt.Printf("Note: Video frame tokens reside in ThoughtsTokenCount (dynamic load_video calls).\n")
 	}
 }
+
+// Calculate token savings percentage using internal/telemetry:
+// savingsPct := telemetry.TokenReductionPct(agenticTotal, staticTotal)
 ```
 
 ---
@@ -421,12 +424,12 @@ func ExecuteConcurrentBenchmark(
 	// Goroutine 1: Agentic Processing (~20-25s wall clock)
 	go func() {
 		defer wg.Done()
-		aResult, aErr := runner.Execute(ctx, client, agenticReq)
+		agenticResult, agenticErr := runner.Execute(ctx, client, agenticReq)
 		mu.Lock()
-		res.AgenticResult = aResult
-		res.AgenticError = aErr
+		res.AgenticResult = agenticResult
+		res.AgenticError = agenticErr
 		if callback != nil {
-			callback(true, res.StaticResult != nil || res.StaticError != nil, aResult, res.StaticResult)
+			callback(true, res.StaticResult != nil || res.StaticError != nil, agenticResult, res.StaticResult)
 		}
 		mu.Unlock()
 	}()
@@ -434,12 +437,12 @@ func ExecuteConcurrentBenchmark(
 	// Goroutine 2: Static 1-FPS Processing (~45-60s wall clock)
 	go func() {
 		defer wg.Done()
-		sResult, sErr := runner.Execute(ctx, client, staticReq)
+		staticResult, staticErr := runner.Execute(ctx, client, staticReq)
 		mu.Lock()
-		res.StaticResult = sResult
-		res.StaticError = sErr
+		res.StaticResult = staticResult
+		res.StaticError = staticErr
 		if callback != nil {
-			callback(res.AgenticResult != nil || res.AgenticError != nil, true, res.AgenticResult, sResult)
+			callback(res.AgenticResult != nil || res.AgenticError != nil, true, res.AgenticResult, staticResult)
 		}
 		mu.Unlock()
 	}()

@@ -218,6 +218,11 @@ func (bt *BenchmarkTracker) redraw(isFinal bool) {
 }
 
 func (bt *BenchmarkTracker) formatElapsed(d time.Duration) string {
+	return FormatElapsed(d)
+}
+
+// FormatElapsed formats duration into MM:SS.S for ticker output.
+func FormatElapsed(d time.Duration) string {
 	d = d.Round(100 * time.Millisecond)
 	m := int(d.Minutes())
 	s := int(d.Seconds()) % 60
@@ -413,9 +418,5 @@ func (mt *MultiModelTracker) redraw(isFinal bool) {
 }
 
 func (mt *MultiModelTracker) formatElapsed(d time.Duration) string {
-	d = d.Round(100 * time.Millisecond)
-	m := int(d.Minutes())
-	s := int(d.Seconds()) % 60
-	ms := int(d.Milliseconds()) % 1000 / 100
-	return fmt.Sprintf("%02d:%02d.%d", m, s, ms)
+	return FormatElapsed(d)
 }

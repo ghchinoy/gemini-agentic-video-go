@@ -1,6 +1,6 @@
 # gemini-agentic-video-go
 
-A Go CLI application demonstrating Gemini agentic video understanding with active Think ➔ Act ➔ Observe dynamic timeline navigation, sub-second precision, and up to 96% token reduction compared to static frame ingestion.
+A Go CLI application demonstrating [Gemini agentic video understanding](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/capabilities/video-understanding) with active Think ➔ Act ➔ Observe dynamic timeline navigation, sub-second precision, and up to 96% token reduction compared to static frame ingestion.
 
 [![Go Version](https://img.shields.io/badge/Go-1.24+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
@@ -24,6 +24,7 @@ A Go CLI application demonstrating Gemini agentic video understanding with activ
 - [License](#license)
 - [Deep Dive Documentation](#deep-dive-documentation)
 - [Credits & Acknowledgements](#credits--acknowledgements)
+- [Disclaimer](#disclaimer)
 
 ## Installation
 
@@ -207,7 +208,7 @@ make run
 
 | Flag | Default | Description |
 | :--- | :--- | :--- |
-| `-m, --model` | `gemini-3.7-flash` | Gemini model ID (`gemini-3.7-flash`, `gemini-3.6-flash`, `gemini-3.5-flash-lite`) |
+| `-m, --model` | `gemini-3.7-flash` | Gemini model ID (`gemini-3.8-flash`, `gemini-3.7-flash`, `gemini-3.6-flash`, `gemini-3.5-flash-lite`) |
 | `-p, --project` | `""` | GCP Project ID (falls back to `GOOGLE_CLOUD_PROJECT` or `gcloud config`) |
 | `-l, --location` | `"global"` | GCP Location / Region (defaults to `GOOGLE_CLOUD_LOCATION` or `"global"`) |
 | `-b, --backend` | `"enterprise"` | Client backend: `enterprise`, `vertex`, or `gemini` (API key) |
@@ -242,7 +243,7 @@ Please make sure all Go code is properly formatted (`make fmt`), passes tests (`
 
 ## License
 
-This project is licensed under the [Apache 2.0 License](LICENSE).
+Code in this repository is licensed under the [Apache 2.0 License](LICENSE).
 
 ---
 
@@ -265,4 +266,9 @@ This project is licensed under the [Apache 2.0 License](LICENSE).
 ## Credits & Acknowledgements
 
 - Based on the [Google Cloud Generative AI Agentic Video Tutorial](https://github.com/GoogleCloudPlatform/generative-ai/blob/main/gemini/agentic-video/intro_agentic_video.ipynb) by [Eric Dong](https://github.com/gericdong) and [Holt Skinner](https://github.com/holtskinner).
-- README structure designed according to Mark Allen's ["How to Write a Great README for Your Public GitHub Project"](https://www.markcallen.com/how-to-write-a-great-readme-for-your-public-github-project/) (Everyday DevOps).
+
+## Disclaimer
+
+> [!CAUTION]
+> This is **not** an officially supported Google product.
+> This project is not eligible for the [Google Open Source Software Vulnerability Rewards Program](https://bughunters.google.com/open-source-security).

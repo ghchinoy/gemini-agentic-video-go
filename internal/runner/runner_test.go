@@ -22,42 +22,48 @@ import (
 
 func TestParseThinkingLevel(t *testing.T) {
 	tests := []struct {
-		input    string
-		expected genai.ThinkingLevel
+		name  string
+		input string
+		want  genai.ThinkingLevel
 	}{
-		{"low", genai.ThinkingLevelLow},
-		{"LOW", genai.ThinkingLevelLow},
-		{"medium", genai.ThinkingLevelMedium},
-		{"high", genai.ThinkingLevelHigh},
-		{"minimal", genai.ThinkingLevelMinimal},
-		{"unknown", genai.ThinkingLevelMedium},
+		{name: "low_lowercase", input: "low", want: genai.ThinkingLevelLow},
+		{name: "low_uppercase", input: "LOW", want: genai.ThinkingLevelLow},
+		{name: "medium", input: "medium", want: genai.ThinkingLevelMedium},
+		{name: "high", input: "high", want: genai.ThinkingLevelHigh},
+		{name: "minimal", input: "minimal", want: genai.ThinkingLevelMinimal},
+		{name: "unknown_fallback_medium", input: "unknown", want: genai.ThinkingLevelMedium},
 	}
 
 	for _, tt := range tests {
-		got := ParseThinkingLevel(tt.input)
-		if got != tt.expected {
-			t.Errorf("ParseThinkingLevel(%q) = %v; want %v", tt.input, got, tt.expected)
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			got := ParseThinkingLevel(tt.input)
+			if got != tt.want {
+				t.Errorf("ParseThinkingLevel(%q) = %v, want %v", tt.input, got, tt.want)
+			}
+		})
 	}
 }
 
 func TestParseProcessingMode(t *testing.T) {
 	tests := []struct {
-		input    string
-		expected genai.MediaProcessing
+		name  string
+		input string
+		want  genai.MediaProcessing
 	}{
-		{"agentic", genai.MediaProcessingAgentic},
-		{"AGENTIC", genai.MediaProcessingAgentic},
-		{"static", genai.MediaProcessingStatic},
-		{"STATIC", genai.MediaProcessingStatic},
-		{"anything_else", genai.MediaProcessingAgentic},
+		{name: "agentic_lowercase", input: "agentic", want: genai.MediaProcessingAgentic},
+		{name: "agentic_uppercase", input: "AGENTIC", want: genai.MediaProcessingAgentic},
+		{name: "static_lowercase", input: "static", want: genai.MediaProcessingStatic},
+		{name: "static_uppercase", input: "STATIC", want: genai.MediaProcessingStatic},
+		{name: "fallback_agentic", input: "anything_else", want: genai.MediaProcessingAgentic},
 	}
 
 	for _, tt := range tests {
-		got := ParseProcessingMode(tt.input)
-		if got != tt.expected {
-			t.Errorf("ParseProcessingMode(%q) = %v; want %v", tt.input, got, tt.expected)
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			got := ParseProcessingMode(tt.input)
+			if got != tt.want {
+				t.Errorf("ParseProcessingMode(%q) = %v, want %v", tt.input, got, tt.want)
+			}
+		})
 	}
 }
 

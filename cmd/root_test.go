@@ -16,6 +16,8 @@ package cmd
 
 import (
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestSubcommandRegistration(t *testing.T) {
@@ -34,36 +36,33 @@ func TestSubcommandRegistration(t *testing.T) {
 }
 
 func TestRunCommandRequiredFlags(t *testing.T) {
-	// Execute run command with no arguments or flags to verify --video requirement
+	// Execute run command with empty video URI to verify required flag validation
 	runVideoURI = ""
 	err := runCmd.RunE(runCmd, []string{})
 	if err == nil {
-		t.Errorf("runCmd.RunE() with empty video URI = nil, want error")
+		t.Errorf("runCmd.RunE(runCmd, nil) with empty video URI error = nil, want non-nil")
 	}
 }
 
 func TestResolveModelsList(t *testing.T) {
 	tests := []struct {
-		input    string
-		expected []string
+		name  string
+		input string
+		want  []string
 	}{
-		{"", nil},
-		{"flash", []string{"gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.8-flash"}},
-		{"all", []string{"gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.8-flash"}},
-		{"3.6,3.8", []string{"gemini-3.6-flash", "gemini-3.8-flash"}},
-		{"gemini-3.7-flash,gemini-3.8-flash", []string{"gemini-3.7-flash", "gemini-3.8-flash"}},
+		{name: "empty", input: "", want: nil},
+		{name: "alias_flash", input: "flash", want: []string{"gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.8-flash"}},
+		{name: "alias_all", input: "all", want: []string{"gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.8-flash"}},
+		{name: "short_version_numbers", input: "3.6,3.8", want: []string{"gemini-3.6-flash", "gemini-3.8-flash"}},
+		{name: "full_model_ids", input: "gemini-3.7-flash,gemini-3.8-flash", want: []string{"gemini-3.7-flash", "gemini-3.8-flash"}},
 	}
 
 	for _, tt := range tests {
-		got := resolveModelsList(tt.input)
-		if len(got) != len(tt.expected) {
-			t.Errorf("resolveModelsList(%q) len = %d, want %d", tt.input, len(got), len(tt.expected))
-			continue
-		}
-		for i := range got {
-			if got[i] != tt.expected[i] {
-				t.Errorf("resolveModelsList(%q)[%d] = %q, want %q", tt.input, i, got[i], tt.expected[i])
+		t.Run(tt.name, func(t *testing.T) {
+			got := resolveModelsList(tt.input)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("resolveModelsList(%q) diff (-want +got):\n%s", tt.input, diff)
 			}
-		}
+		})
 	}
 }

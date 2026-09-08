@@ -16,44 +16,64 @@ package telemetry
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"time"
 
 	"google.golang.org/genai"
 )
 
-// PrintUsage displays a structured breakdown of token consumption.
+// TokenReductionPct calculates the percentage reduction in token consumption.
+func TokenReductionPct(agenticTotal, staticTotal int64) float64 {
+	if staticTotal <= 0 {
+		return 0.0
+	}
+	return float64(staticTotal-agenticTotal) / float64(staticTotal) * 100.0
+}
+
+// PrintUsage displays a structured breakdown of token consumption to os.Stdout.
 func PrintUsage(usage *genai.GenerateContentResponseUsageMetadata, mode genai.MediaProcessing, duration time.Duration) {
+	FprintUsage(os.Stdout, usage, mode, duration)
+}
+
+// FprintUsage writes a structured breakdown of token consumption to the specified writer.
+func FprintUsage(w io.Writer, usage *genai.GenerateContentResponseUsageMetadata, mode genai.MediaProcessing, duration time.Duration) {
 	if usage == nil {
-		fmt.Printf("Processing Duration: %v (token usage telemetry not returned)\n\n", duration.Round(time.Millisecond))
+		fmt.Fprintf(w, "Processing Duration: %v (token usage telemetry not returned)\n\n", duration.Round(time.Millisecond))
 		return
 	}
 
-	fmt.Printf("Token Telemetry Breakdown:\n")
-	fmt.Printf("  • Total Token Count:     %d\n", usage.TotalTokenCount)
-	fmt.Printf("  • Prompt Input Tokens:   %d", usage.PromptTokenCount)
+	fmt.Fprintf(w, "Token Telemetry Breakdown:\n")
+	fmt.Fprintf(w, "  • Total Token Count:     %d\n", usage.TotalTokenCount)
+	fmt.Fprintf(w, "  • Prompt Input Tokens:   %d", usage.PromptTokenCount)
 	if mode == genai.MediaProcessingAgentic {
-		fmt.Printf(" (text-only prompt; video frames dynamically fetched on-demand)")
+		fmt.Fprintf(w, " (text-only prompt; video frames dynamically fetched on-demand)")
 	} else if mode == genai.MediaProcessingStatic {
-		fmt.Printf(" (includes 100%% of video frames statically pre-ingested at 1 FPS)")
+		fmt.Fprintf(w, " (includes 100%% of video frames statically pre-ingested at 1 FPS)")
 	}
-	fmt.Println()
+	fmt.Fprintln(w)
 
-	fmt.Printf("  • Candidates Tokens:     %d\n", usage.CandidatesTokenCount)
+	fmt.Fprintf(w, "  • Candidates Tokens:     %d\n", usage.CandidatesTokenCount)
 	if usage.ThoughtsTokenCount > 0 {
-		fmt.Printf("  • Thoughts Tokens:       %d", usage.ThoughtsTokenCount)
+		fmt.Fprintf(w, "  • Thoughts Tokens:       %d", usage.ThoughtsTokenCount)
 		if mode == genai.MediaProcessingAgentic {
-			fmt.Printf(" (includes native timeline navigation & dynamic inspection)")
+			fmt.Fprintf(w, " (includes native timeline navigation & dynamic inspection)")
 		}
-		fmt.Println()
+		fmt.Fprintln(w)
 	}
-	fmt.Printf("Processing Duration:       %v\n\n", duration.Round(time.Millisecond))
+	fmt.Fprintf(w, "Processing Duration:       %v\n\n", duration.Round(time.Millisecond))
 }
 
-// PrintComparison displays a side-by-side performance comparison table.
+// PrintComparison displays a side-by-side performance comparison table to os.Stdout.
 func PrintComparison(agenticUsage, staticUsage *genai.GenerateContentResponseUsageMetadata, agenticDuration, staticDuration time.Duration) {
-	fmt.Printf("=========================================================================================\n")
-	fmt.Printf("  PERFORMANCE BENCHMARK: AGENTIC VIDEO vs. STATIC (1 FPS) INGESTION\n")
-	fmt.Printf("=========================================================================================\n")
+	FprintComparison(os.Stdout, agenticUsage, staticUsage, agenticDuration, staticDuration)
+}
+
+// FprintComparison writes a side-by-side performance comparison table to the specified writer.
+func FprintComparison(w io.Writer, agenticUsage, staticUsage *genai.GenerateContentResponseUsageMetadata, agenticDuration, staticDuration time.Duration) {
+	fmt.Fprintf(w, "=========================================================================================\n")
+	fmt.Fprintf(w, "  PERFORMANCE BENCHMARK: AGENTIC VIDEO vs. STATIC (1 FPS) INGESTION\n")
+	fmt.Fprintf(w, "=========================================================================================\n")
 
 	agenticTotal := int64(0)
 	staticTotal := int64(0)
@@ -77,22 +97,19 @@ func PrintComparison(agenticUsage, staticUsage *genai.GenerateContentResponseUsa
 		staticThoughts = staticUsage.ThoughtsTokenCount
 	}
 
-	var tokenDeltaPct float64
-	if staticTotal > 0 {
-		tokenDeltaPct = float64(staticTotal-agenticTotal) / float64(staticTotal) * 100.0
-	}
+	tokenDeltaPct := TokenReductionPct(agenticTotal, staticTotal)
 
-	fmt.Printf("| Metric                     | Agentic Video        | Static Ingestion     | Observation / Delta       |\n")
-	fmt.Printf("|:---------------------------|:---------------------|:---------------------|:--------------------------|\n")
-	fmt.Printf("| Total Consumed Tokens      | %-20d | %-20d | %+.1f%% net token spend   |\n", agenticTotal, staticTotal, tokenDeltaPct)
-	fmt.Printf("| Prompt Tokens (Input)      | %-20d | %-20d | %-+25s |\n", agenticPrompt, staticPrompt, fmt.Sprintf("%+d input tokens", agenticPrompt-staticPrompt))
-	fmt.Printf("| Candidate Output Tokens    | %-20d | %-20d | %-+25s |\n", agenticCandidates, staticCandidates, fmt.Sprintf("%+d output tokens", agenticCandidates-staticCandidates))
-	fmt.Printf("| Reasoning Thoughts Tokens  | %-20d | %-20d | %-+25s |\n", agenticThoughts, staticThoughts, "dynamic frame inspection")
-	fmt.Printf("| Latency (Duration)         | %-20v | %-20v | %-+25s |\n",
+	fmt.Fprintf(w, "| Metric                     | Agentic Video        | Static Ingestion     | Observation / Delta       |\n")
+	fmt.Fprintf(w, "|:---------------------------|:---------------------|:---------------------|:--------------------------|\n")
+	fmt.Fprintf(w, "| Total Consumed Tokens      | %-20d | %-20d | %+.1f%% net token spend   |\n", agenticTotal, staticTotal, tokenDeltaPct)
+	fmt.Fprintf(w, "| Prompt Tokens (Input)      | %-20d | %-20d | %-+25s |\n", agenticPrompt, staticPrompt, fmt.Sprintf("%+d input tokens", agenticPrompt-staticPrompt))
+	fmt.Fprintf(w, "| Candidate Output Tokens    | %-20d | %-20d | %-+25s |\n", agenticCandidates, staticCandidates, fmt.Sprintf("%+d output tokens", agenticCandidates-staticCandidates))
+	fmt.Fprintf(w, "| Reasoning Thoughts Tokens  | %-20d | %-20d | %-+25s |\n", agenticThoughts, staticThoughts, "dynamic frame inspection")
+	fmt.Fprintf(w, "| Latency (Duration)         | %-20v | %-20v | %-+25s |\n",
 		agenticDuration.Round(time.Millisecond),
 		staticDuration.Round(time.Millisecond),
 		fmt.Sprintf("diff: %v", (agenticDuration-staticDuration).Round(time.Millisecond)))
-	fmt.Printf("=========================================================================================\n")
-	fmt.Printf("💡 Telemetry Insight: In Agentic mode, initial prompt tokens are minimal because video frames\n")
-	fmt.Printf("   are fetched dynamically during the model's Think ➔ Act timeline loop (accounted under thoughts).\n\n")
+	fmt.Fprintf(w, "=========================================================================================\n")
+	fmt.Fprintf(w, "💡 Telemetry Insight: In Agentic mode, initial prompt tokens are minimal because video frames\n")
+	fmt.Fprintf(w, "   are fetched dynamically during the model's Think ➔ Act timeline loop (accounted under thoughts).\n\n")
 }
