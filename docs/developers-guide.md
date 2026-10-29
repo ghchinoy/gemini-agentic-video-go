@@ -285,7 +285,7 @@ func RunVideoChat(ctx context.Context, client *genai.Client, videoURI string, qu
 
 ## 7. Streaming Video Exploration
 
-For interactive user experiences, use `GenerateContentStream` (an `iter.Seq2[*genai.GenerateContentResponse, error]` iterator in Go 1.23+) to stream the response as it arrives:
+For interactive user experiences, use `GenerateContentStream` (a range-over-func iterator in Go 1.23+) to stream the response as it arrives:
 
 ```go
 func StreamVideoResponse(ctx context.Context, client *genai.Client, videoURI, prompt string) error {
@@ -332,7 +332,7 @@ func StreamVideoResponse(ctx context.Context, client *genai.Client, videoURI, pr
 ### The Dynamic Frame Accounting Shift
 When reading `resp.UsageMetadata` in Agentic mode (`TotalTokenCount = PromptTokenCount + ToolUsePromptTokenCount + ThoughtsTokenCount + CandidatesTokenCount`):
 - **`PromptTokenCount`**: Reflects **only the text prompt and URI metadata** (~70–95 tokens). Video frames are **not** present here.
-- **`ToolUsePromptTokenCount`**: Contains all video frames (`VIDEO`) and ASR caption tracks (`TEXT`) dynamically fetched by `load_video` during the timeline exploration loop (detailed in `ToolUsePromptTokensDetails`).
+- **`ToolUsePromptTokenCount`**: Contains all video frames (`VIDEO`) and audio caption tracks (`TEXT`) dynamically fetched by `load_video` during the timeline exploration loop (detailed in `ToolUsePromptTokensDetails`).
 - **`CachedContentTokenCount`**: Contains context tokens implicitly reused across multi-hop `load_video` turns (`CacheTokensDetails`).
 - **`ThoughtsTokenCount`**: Contains the model's internal Think ➔ Act planning and synthesis reasoning tokens.
 - **`CandidatesTokenCount`**: Contains the final output text generated for the user.

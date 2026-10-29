@@ -140,9 +140,9 @@ func TestNormalizeVideoURI(t *testing.T) {
 }
 
 func TestExtractModelTurnContentAndDetails(t *testing.T) {
-	sigCall := []byte("call-sig")
-	sigResult := []byte("result-sig")
-	sigFinal := []byte("final-sig")
+	callSignature := []byte("call-signature")
+	resultSignature := []byte("result-signature")
+	finalSignature := []byte("final-signature")
 
 	resp := &genai.GenerateContentResponse{
 		Candidates: []*genai.Candidate{
@@ -151,10 +151,10 @@ func TestExtractModelTurnContentAndDetails(t *testing.T) {
 					Role: genai.RoleModel,
 					Parts: []*genai.Part{
 						{Text: "Step 1 reasoning", Thought: true},
-						{ThoughtSignature: sigCall},
-						{ThoughtSignature: sigResult},
+						{ThoughtSignature: callSignature},
+						{ThoughtSignature: resultSignature},
 						{Text: "Step 2 reasoning", Thought: true},
-						{Text: "Final synthesized answer", ThoughtSignature: sigFinal},
+						{Text: "Final synthesized answer", ThoughtSignature: finalSignature},
 					},
 				},
 			},
@@ -176,8 +176,8 @@ func TestExtractModelTurnContentAndDetails(t *testing.T) {
 	if turnContent.Parts[0].Text != "Final synthesized answer" {
 		t.Errorf("turnContent.Parts[0].Text = %q, want %q", turnContent.Parts[0].Text, "Final synthesized answer")
 	}
-	if !bytes.Equal(turnContent.Parts[0].ThoughtSignature, sigFinal) {
-		t.Errorf("turnContent.Parts[0].ThoughtSignature = %q, want %q", turnContent.Parts[0].ThoughtSignature, sigFinal)
+	if !bytes.Equal(turnContent.Parts[0].ThoughtSignature, finalSignature) {
+		t.Errorf("turnContent.Parts[0].ThoughtSignature = %q, want %q", turnContent.Parts[0].ThoughtSignature, finalSignature)
 	}
 }
 

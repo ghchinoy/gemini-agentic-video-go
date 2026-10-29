@@ -121,7 +121,7 @@ func withCommandTimeout(ctx context.Context) (context.Context, context.CancelFun
 
 // writeJSON serializes v as indented JSON to stdout.
 func writeJSON(v any) error {
-	enc := json.NewEncoder(os.Stdout)
-	enc.SetIndent("", "  ")
-	return enc.Encode(v)
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(v)
 }

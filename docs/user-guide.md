@@ -144,7 +144,7 @@ When enabling Agentic Video (`media_processing="agentic"`), token reporting shif
 | Token Metric | Static Mode (`STATIC`) | Agentic Mode (`AGENTIC`) |
 | :--- | :--- | :--- |
 | **Prompt Tokens (`promptTokenCount`)** | High (100% video frames + text) | Minimal (text + URI metadata only; 0 video frames) |
-| **Tool-Use Tokens (`toolUsePromptTokenCount`)** | `0` | **Dynamic video frames (`VIDEO`) & ASR captions (`TEXT`) fetched via `load_video`** |
+| **Tool-Use Tokens (`toolUsePromptTokenCount`)** | `0` | **Dynamic video frames (`VIDEO`) & audio captions (`TEXT`) fetched via `load_video`** |
 | **Cached Tokens (`cachedContentTokenCount`)** | `0` (unless explicit cache used) | Implicitly cached context across multi-hop `load_video` turns |
 | **Thinking Tokens (`thoughtsTokenCount`)** | Standard reasoning | Think ➔ Act timeline planning & synthesis |
 | **Candidates Tokens (`candidatesTokenCount`)** | Answer text only | Final synthesized answer text |

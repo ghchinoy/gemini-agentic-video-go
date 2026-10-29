@@ -521,8 +521,8 @@ func ExecuteMultiModelBenchmark(
 
 // ParseThinkingLevel maps string representation to genai.ThinkingLevel.
 func ParseThinkingLevel(level string) genai.ThinkingLevel {
-	lvl, _ := ParseThinkingLevelE(level)
-	return lvl
+	parsed, _ := ParseThinkingLevelE(level)
+	return parsed
 }
 
 // ParseThinkingLevelE maps string representation to genai.ThinkingLevel and returns an error for unknown values.
